@@ -13,8 +13,11 @@ importr('hash')
 def build_dimermotif():
     robjects.r['load']("./JiecongData/DimerMotifDatabase.RData")
     dimer = str(robjects.r['DimerMotifDatabase'])
+    family = str(robjects.r['DimerMotifFamily'])
     with open("./dimerMotifDatabase.txt", "a") as f:
         f.write(dimer)
+    with open("./dimerMotifFamily.txt", "a") as f:
+        f.write(family)
 
 def build_motif():
     robjects.r['load']("./JiecongData/motifDatabase.RData")
@@ -29,4 +32,5 @@ def build_homo_motif():
         f.write(motif)
 
 
-build_homo_motif()
+# build_homo_motif()
+build_dimermotif()
