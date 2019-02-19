@@ -20,10 +20,24 @@ def load_motif(filename="./JiecongData/dimerMotifDatabase.txt"):
             # print(dict[hd_name].shape)
     return dict
 
+def load_dimer_family():
+    dict = {}
+    filename = "./JiecongData/dimerMotifFamily.txt"
+    with open(filename, "r") as f:
+        for line in f:
+            hd_motif = line.split(" : ")
+            name = hd_motif[0].strip()
+            family = hd_motif[1].strip()
+            dict[name] = family
+    # print(dict)
+    # print(len(dict))
+    # print(len(set(list(dict.values()))))
+    return dict
 # load_motif(filename="./JiecongData/homodimerMotifDatabase.txt")
 
 def pair_motif_and_dimer():
     dimer_motif_dict = load_motif(filename="./JiecongData/dimerMotifDatabase.txt")
+    dimer_family_dict = load_dimer_family()
     # motif_dict = load_motif(filename="./JiecongData/motifDatabase.txt")
     # homo_motif_dict = load_motif(filename="./JiecongData/homodimerMotifDatabase.txt")
     # print(motif)
@@ -58,8 +72,7 @@ def pair_motif_and_dimer():
         print(motif1_seq_dict)
         print(motif2_seq_dict)
 
-        motifp_dimer_list.append([dimer_seq_dict, motif1_seq_dict, motif2_seq_dict])
-
+        motifp_dimer_list.append([dimer_seq_dict, motif1_seq_dict, motif2_seq_dict, dimer_family_dict[dimer]])
 
     print(no_found_motif)
     # motif_dict = load_motif(filename="./JiecongData/motifDatabase.txt")
@@ -77,6 +90,7 @@ def find_motif_seq(motif):
     # dimer_motif_dict = load_motif(filename="./JiecongData/dimerMotifDatabase.txt")
     motif_dict = load_motif(filename="./JiecongData/motifDatabase.txt")
     homo_motif_dict = load_motif(filename="./JiecongData/homodimerMotifDatabase.txt")
+
 
     motifs = np.array(list(motif_dict.keys()))
     hmotifs = np.array(list(homo_motif_dict.keys()))
@@ -105,5 +119,8 @@ def find_motif_idx(dimer_motif, motif_database):
         idx = -1
     return idx
 
-pair_motif_and_dimer()
-
+# pair_motif_and_dimer()
+dict = load_dimer_family()
+print(len(set(list(dict.values()))))
+print(len(dict))
+print(dict)
