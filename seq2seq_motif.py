@@ -12,6 +12,7 @@ import pandas as pd
 # two motif max length  : 32
 
 motif_data = pkl.load(open("./dimer_motif_pair.pkl", "rb"))
+
 # print(motif_data)
 # print(len(motif_data))
 
@@ -55,6 +56,7 @@ def generate_input_motif_seq():
         dimer_dict = motif[0]
         motif1_dict = motif[1]
         motif2_dict = motif[2]
+        dimer_family = motif[3]
         # print(dimer_dict)
         dimer_name = list(dimer_dict.keys())[0]
         motif1_name = list(motif1_dict.keys())[0]
@@ -84,9 +86,17 @@ def generate_input_motif_seq():
         print(dimer_seq.shape)
         print(dimer_seq)
 
-        data.append([motif_pair_name, motif_pair_seq, dimer_name, dimer_seq])
-    print(data)
+        data.append([motif_pair_name, motif_pair_seq, dimer_name, dimer_seq, dimer_family])
+    # print(data)
+    return data
+
+def seq2seq_model(input_seq):
+    pass
 
 
-
-generate_input_motif_seq()
+data = generate_input_motif_seq()
+bhomeo = []
+for d in data:
+    if d[-1] == "bHLH_Homeo":
+        bhomeo.append(d)
+print(bhomeo)

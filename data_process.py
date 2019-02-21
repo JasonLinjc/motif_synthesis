@@ -85,6 +85,13 @@ def pair_motif_and_dimer():
     import pickle
     pickle.dump(motifp_dimer_list, open("./dimer_motif_pair.pkl",  "wb"))
 
+def load_kc_dimer():
+    file = "./JiecongData/kc_heterodimer.txt"
+    f = open(file, "r")
+    dimer = []
+    for d in f.readlines():
+        dimer.append(d.strip())
+    return dimer
 
 def find_motif_seq(motif):
     # dimer_motif_dict = load_motif(filename="./JiecongData/dimerMotifDatabase.txt")
@@ -120,7 +127,31 @@ def find_motif_idx(dimer_motif, motif_database):
     return idx
 
 # pair_motif_and_dimer()
+
 dict = load_dimer_family()
-print(len(set(list(dict.values()))))
 print(len(dict))
-print(dict)
+fam = list(dict.values())
+# print(fam)
+"""
+f_count = {}
+fam_b = []
+for f in fs:
+    num = fam.count(f)
+    if num > 3:
+        fam_b.append(f)
+    f_count[f] = fam.count(f)
+
+print(f_count)
+print(len(fam_b))
+print(fam_b)
+
+dimers = load_kc_dimer()
+# print(dimers)
+dimer_dict = {}
+for d in dimers:
+    dimer_dict[d] = fam.count(d)
+
+print(dimer_dict)
+"""
+name = "bHLH_Homeo"
+
