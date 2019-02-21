@@ -47,7 +47,6 @@ def find_motif_length():
     print("dimer_len", max_dimer_len)
     print("motif_pair_len", max_motifpair_len)
 
-
 def generate_input_motif_seq():
     max_dimer_len = 31
     max_motif_pair_len = 32
@@ -62,7 +61,6 @@ def generate_input_motif_seq():
         motif1_name = list(motif1_dict.keys())[0]
         motif2_name = list(motif2_dict.keys())[0]
         motif_pair_name = motif1_name + ":" + motif2_name
-
 
         dimer_seq = dimer_dict[dimer_name]
         motif1_seq = motif1_dict[motif1_name]
@@ -90,13 +88,16 @@ def generate_input_motif_seq():
     # print(data)
     return data
 
+def get_motif_from_family(family_name = "bHLH_Homeo"):
+    data = generate_input_motif_seq()
+    motif = []
+    for d in data:
+        if d[-1] == "bHLH_Homeo":
+            motif.append(d)
+    print(motif)
+    return motif
+
 def seq2seq_model(input_seq):
     pass
 
 
-data = generate_input_motif_seq()
-bhomeo = []
-for d in data:
-    if d[-1] == "bHLH_Homeo":
-        bhomeo.append(d)
-print(bhomeo)
