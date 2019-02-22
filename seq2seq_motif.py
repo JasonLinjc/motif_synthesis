@@ -75,29 +75,39 @@ def generate_input_motif_seq():
         motif_padding_len = max_motif_pair_len + 1 - len(motif_pair_seq)
         padding_vec = np.zeros((motif_padding_len, 4))
         motif_pair_seq = np.concatenate((motif_pair_seq, padding_vec))
-        print(motif_pair_seq.shape)
-        print(motif_pair_seq)
+        # print(motif_pair_seq.shape)
+        # print(motif_pair_seq)
 
         dimer_padding_len = max_dimer_len - len(dimer_seq)
         padding_vec = np.zeros((dimer_padding_len, 4))
         dimer_seq = np.concatenate((dimer_seq, padding_vec))
-        print(dimer_seq.shape)
-        print(dimer_seq)
-
+        # print(dimer_seq.shape)
+        # print(dimer_seq)
         data.append([motif_pair_name, motif_pair_seq, dimer_name, dimer_seq, dimer_family])
-    # print(data)
     return data
 
 def get_motif_from_family(family_name = "bHLH_Homeo"):
     data = generate_input_motif_seq()
     motif = []
+    x_train = []
+    y_train = []
     for d in data:
         if d[-1] == "bHLH_Homeo":
+            x_train.append(d[1].T)
+            y_train.append(d[3].T)
             motif.append(d)
-    print(motif)
-    return motif
 
-def seq2seq_model(input_seq):
+    # print(motif)
+    return np.array(x_train), np.array(y_train)
+
+def seq2seq_model():
+    x_train, y_train = get_motif_from_family()
+    print(x_train.shape)
+    print(y_train.shape)
+    
+
+
     pass
+
 
 

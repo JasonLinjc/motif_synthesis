@@ -86,7 +86,7 @@ def pair_motif_and_dimer():
     pickle.dump(motifp_dimer_list, open("./dimer_motif_pair.pkl",  "wb"))
 
 def load_kc_dimer():
-    file = "./JiecongData/kc_heterodimer.txt"
+    file = "./JiecongData/kc_heterodimer_family.txt"
     f = open(file, "r")
     dimer = []
     for d in f.readlines():
