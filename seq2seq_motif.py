@@ -162,7 +162,8 @@ def get_motif_from_family(family_name = "bHLH_Homeo"):
     # print(motif)
     return np.array(x_train), np.array(y_train)
 
-def get_reverse_com_y():
+def get_rev_com_y(seq):
+
     pass
 
 
@@ -176,7 +177,7 @@ def seq2seq_model():
     print(x_train.shape)
     print(y_train.shape)
     RNN = layers.LSTM
-    HIDDEN_SIZE = 128
+    HIDDEN_SIZE = 256
     BATCH_SIZE = 1
     LAYERS = 1
     MAX_IN = 33
@@ -222,7 +223,6 @@ def seq2seq_model():
     print(x_val[0])
     print(x_pred[0])
     print(y_val[0])
-
 
 seq2seq_model()
 # data = generate_input_ex_code()
