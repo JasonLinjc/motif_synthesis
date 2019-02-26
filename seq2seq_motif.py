@@ -162,9 +162,25 @@ def get_motif_from_family(family_name = "bHLH_Homeo"):
     # print(motif)
     return np.array(x_train), np.array(y_train)
 
-def get_rev_com_y(seq):
+def get_rev_com_y(seq_mat):
+    print(seq_mat)
+    print("-"*50)
+    reversed_mat = seq_mat[::-1].copy()
 
-    pass
+    for i in range(len(reversed_mat)):
+        reversed_mat[i] = np.concatenate((reversed_mat[i][:4][::-1], reversed_mat[i][4:]))
+
+    print(seq_mat)
+
+    print(reversed_mat)
+
+def compare_seq(x_pred, y_val):
+    with open("motif_res.txt", "w") as f:
+        for i in range(len(x_pred[0])):
+            f.write(np.array2string(x_pred[0][i], precision=3, separator='\t\t'))
+            f.write("\n")
+            f.write(np.array2string(y_val[0][i], precision=3, separator='\t\t') + "\n")
+            f.write("-"*20 + str(i) + "-"*20 + "\n")
 
 
 def seq2seq_model():
@@ -177,7 +193,7 @@ def seq2seq_model():
     print(x_train.shape)
     print(y_train.shape)
     RNN = layers.LSTM
-    HIDDEN_SIZE = 256
+    HIDDEN_SIZE = 128
     BATCH_SIZE = 1
     LAYERS = 1
     MAX_IN = 33
@@ -223,10 +239,18 @@ def seq2seq_model():
     print(x_val[0])
     print(x_pred[0])
     print(y_val[0])
+    compare_seq(x_pred[0], y_val[0])
 
-seq2seq_model()
+
+# seq2seq_model()
 # data = generate_input_ex_code()
 # print(data[0])
+# x, y = get_motif_from_family()
+# x_train = x[0]
+# y_train = y[0]
+# get_rev_com_y(y[0])
+
+
 
 
 
