@@ -171,7 +171,6 @@ def get_rev_com_y(seq_mat):
         reversed_mat[i] = np.concatenate((reversed_mat[i][:4][::-1], reversed_mat[i][4:]))
 
     print(seq_mat)
-
     print(reversed_mat)
 
 def compare_seq(x_pred, y_val):
@@ -181,7 +180,6 @@ def compare_seq(x_pred, y_val):
             f.write("\n")
             f.write(np.array2string(y_val[0][i], precision=3, separator='\t\t') + "\n")
             f.write("-"*20 + str(i) + "-"*20 + "\n")
-
 
 def seq2seq_model():
     x, y = get_motif_from_family()
@@ -226,7 +224,7 @@ def seq2seq_model():
                   metrics=['mae'])
     model.summary()
 
-    for iter in range(1, 500):
+    for iter in range(1, 200):
         print()
         print("-" * 50)
         print('Iteration', iter)
@@ -239,15 +237,28 @@ def seq2seq_model():
     print(x_val[0])
     print(x_pred[0])
     print(y_val[0])
-    compare_seq(x_pred[0], y_val[0])
+    # compare_seq(x_pred[0], y_val[0]
+    mean_motif_column_dist(x_pred[0], y_val[0])
+    mean_motif_column_dist(x_pred[1], y_val[1])
 
+def mean_motif_column_dist(pred_seq, true_seq):
+    sum_dist = 0
+    len_pred = len(np.arange(len(pred_seq))[pred_seq[:, -1] > 0.9])
+    len_true = len(np.arange(len(true_seq))[true_seq[:, -1] == 0])
+    print(len_pred, len_true)
+    len_ = min([len_true, len_pred])
+    # print(len_)
+    for i in range(len_):
+        sum_dist += np.sqrt(sum((true_seq[i] - pred_seq[i])**2))
+    print(sum_dist/len_)
 
-# seq2seq_model()
+seq2seq_model()
 # data = generate_input_ex_code()
 # print(data[0])
 # x, y = get_motif_from_family()
 # x_train = x[0]
 # y_train = y[0]
+# mean_motif_column_dist()
 # get_rev_com_y(y[0])
 
 
