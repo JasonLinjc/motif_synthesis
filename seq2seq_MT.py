@@ -81,7 +81,6 @@ def get_motif_from_family(family_name = "bHLH_Homeo"):
     # print(motif)
     return np.array(encoder_input), np.array(decoder_input), np.array(decoder_target)
 
-
 def seq2seq_mt_model(encoder_input_data, decoder_input_data, decoder_target_data):
     # define an input sequence and process it
     batch_size = 1
@@ -108,13 +107,14 @@ def seq2seq_mt_model(encoder_input_data, decoder_input_data, decoder_target_data
     model.compile(optimizer=Adam(lr=0.01, beta_1=0.9, beta_2=0.999, decay=0.001), loss='categorical_crossentropy')
     model.fit([encoder_input_data, decoder_input_data], decoder_target_data,
               batch_size=batch_size,
-              epochs=epochs,
-              validation_split=0.2)
+              epochs=epochs)
 
-
-
-data = generate_input_motif_seq()
-print(data[0])
-
+encoder_input, decoder_input, decoder_target = get_motif_from_family()
+# print(encoder_input.shape)
+# print(decoder_input.shape)
+# print(decoder_target.shape)
+enc_in_train = encoder_input[:-1]
+dec_in_train = decoder_input[:-1]
+dec_tar_train = decoder_target[:-1]
 
 
