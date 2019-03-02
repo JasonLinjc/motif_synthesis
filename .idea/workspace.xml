@@ -40,8 +40,11 @@
       <file leaf-file-name="seq2seq_MT.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/seq2seq_MT.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-274">
-              <caret line="70" column="22" lean-forward="true" selection-start-line="70" selection-start-column="22" selection-end-line="70" selection-end-column="22" />
+            <state relative-caret-position="547">
+              <caret line="120" column="51" selection-start-line="120" selection-start-column="36" selection-end-line="120" selection-end-column="51" />
+              <folding>
+                <element signature="e#126#146#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -148,7 +151,7 @@
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds" extendedState="6" fullScreen="true">
+  <component name="ProjectFrameBounds" fullScreen="true">
     <option name="x" value="206" />
     <option name="y" value="190" />
     <option name="width" value="1717" />
@@ -325,7 +328,7 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="673" y="0" width="1007" height="1050" extended-state="6" />
+    <frame x="0" y="0" width="1680" height="1050" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" weight="0.16455697" />
@@ -429,6 +432,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="483">
           <caret line="27" lean-forward="true" selection-start-line="27" selection-end-line="27" />
+          <folding>
+            <element signature="e#126#146#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -514,8 +520,11 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/seq2seq_MT.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-274">
-          <caret line="70" column="22" lean-forward="true" selection-start-line="70" selection-start-column="22" selection-end-line="70" selection-end-column="22" />
+        <state relative-caret-position="547">
+          <caret line="120" column="51" selection-start-line="120" selection-start-column="36" selection-end-line="120" selection-end-column="51" />
+          <folding>
+            <element signature="e#126#146#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

@@ -109,6 +109,20 @@ def seq2seq_mt_model(encoder_input_data, decoder_input_data, decoder_target_data
               batch_size=batch_size,
               epochs=epochs)
 
+    # Define sampling models
+    encoder_model = Model(encoder_inputs, encoder_states)
+
+    decoder_state_input_h = Input(shape=(latent_dim,))
+    decoder_state_input_c = Input(shape=(latent_dim,))
+    decoder_states_inputs = [decoder_state_input_h, decoder_state_input_c]
+    decoder_outputs, state_h, state_c = decoder_lstm(
+        decoder_inputs, initial_state=decoder_states_inputs)
+    decoder_states = [state_h, state_c]
+    decoder_outputs = decoder_dense(decoder_outputs)
+    decoder_model = Model(
+        [decoder_inputs] + decoder_states_inputs,
+        [decoder_outputs] + decoder_states)
+
 encoder_input, decoder_input, decoder_target = get_motif_from_family()
 # print(encoder_input.shape)
 # print(decoder_input.shape)
