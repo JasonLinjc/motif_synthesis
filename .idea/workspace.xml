@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="eb4d0b35-a63c-4379-a313-527b05397e07" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/seq2seq_MT.py" beforeDir="false" afterPath="$PROJECT_DIR$/seq2seq_MT.py" afterDir="false" />
-    </list>
+    <list default="true" id="eb4d0b35-a63c-4379-a313-527b05397e07" name="Default Changelist" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -40,8 +38,8 @@
       <file leaf-file-name="seq2seq_MT.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/seq2seq_MT.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="547">
-              <caret line="120" column="51" selection-start-line="120" selection-start-column="36" selection-end-line="120" selection-end-column="51" />
+            <state relative-caret-position="422">
+              <caret line="118" column="22" selection-start-line="118" selection-start-column="8" selection-end-line="118" selection-end-column="22" />
               <folding>
                 <element signature="e#126#146#0" expanded="true" />
               </folding>
@@ -336,7 +334,7 @@
       <window_info anchor="bottom" id="Event Log" order="8" side_tool="true" />
       <window_info anchor="bottom" id="Version Control" order="6" weight="0.32948583" />
       <window_info anchor="bottom" id="Python Console" order="10" weight="0.32948583" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.31179488" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.31179488" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info anchor="bottom" id="Terminal" order="7" />
       <window_info id="Favorites" order="2" side_tool="true" />
@@ -520,8 +518,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/seq2seq_MT.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="547">
-          <caret line="120" column="51" selection-start-line="120" selection-start-column="36" selection-end-line="120" selection-end-column="51" />
+        <state relative-caret-position="422">
+          <caret line="118" column="22" selection-start-line="118" selection-start-column="8" selection-end-line="118" selection-end-column="22" />
           <folding>
             <element signature="e#126#146#0" expanded="true" />
           </folding>
