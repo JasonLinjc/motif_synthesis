@@ -191,7 +191,7 @@ def seq2seq_model():
     print(x_train.shape)
     print(y_train.shape)
     RNN = layers.LSTM
-    HIDDEN_SIZE = 128
+    HIDDEN_SIZE = 64
     BATCH_SIZE = 1
     LAYERS = 1
     MAX_IN = 33
@@ -230,10 +230,11 @@ def seq2seq_model():
         print('Iteration', iter)
         model.fit(x_train, y_train,
                   batch_size=BATCH_SIZE,
-                  epochs=1,
-                  validation_data=[x_val, y_val])
+                  epochs=1)
+                # validation_data=[x_val, y_val])
 
     x_pred = model.predict(x_val)
+    print(x_pred)
     print(x_val[0])
     print(x_pred[0])
     print(y_val[0])
@@ -243,14 +244,18 @@ def seq2seq_model():
 
 def mean_motif_column_dist(pred_seq, true_seq):
     sum_dist = 0
-    len_pred = len(np.arange(len(pred_seq))[pred_seq[:, -1] > 0.9])
-    len_true = len(np.arange(len(true_seq))[true_seq[:, -1] == 0])
-    print(len_pred, len_true)
-    len_ = min([len_true, len_pred])
+    # len_pred = len(np.arange(len(pred_seq))[pred_seq[:, -1] < 0.9])
+    # len_true = len(np.arange(len(true_seq))[true_seq[:, -1] == 0])
+
+    pred_stop_idx = max(np.arange(len(pred_seq))[pred_seq[:, -1] < 0.9])
+    true_top_idx =  max(np.arange(len(true_seq))[true_seq[:, -1] == 0])
+
+    print(pred_stop_idx, true_top_idx)
+    max_idx = min([pred_stop_idx, true_top_idx])
     # print(len_)
-    for i in range(len_):
-        sum_dist += np.sqrt(sum((true_seq[i] - pred_seq[i])**2))
-    print(sum_dist/len_)
+    for i in range(max_idx + 1):
+        sum_dist += np.sqrt(sum((true_seq[i,:4] - pred_seq[i,:4])**2))
+    print(sum_dist/(max_idx + 1))
 
 seq2seq_model()
 # data = generate_input_ex_code()

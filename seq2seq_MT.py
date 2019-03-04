@@ -81,6 +81,18 @@ def get_motif_from_family(family_name = "bHLH_Homeo"):
     # print(motif)
     return np.array(encoder_input), np.array(decoder_input), np.array(decoder_target)
 
+def mean_motif_column_dist(pred_seq, true_seq):
+    sum_dist = 0
+    print("pred_shape:",  pred_seq.shape, " true_shape:", true_seq.shape)
+    len_pred = len(np.arange(len(pred_seq))[pred_seq[:,0,-1] > 0.9])
+    len_true = len(np.arange(len(true_seq))[true_seq[:,0,-1] == 1])
+    print(len_pred, len_true)
+    len_ = min([len_true, len_pred])
+    # print(len_)
+    for i in range(len_):
+        sum_dist += np.sqrt(sum((true_seq[i] - pred_seq[i])**2))
+    print(sum_dist/len_)
+
 def leave_one_validation():
     encoder_input, decoder_input, decoder_target = get_motif_from_family()
     # print(encoder_input.shape)
@@ -161,7 +173,7 @@ def seq2seq_mt_model(encoder_input_data, decoder_input_data, decoder_target_data
         sampled_token_index = np.argmax(output_tokens[0, 0, :])
 
         # Exit condition: either hit max length or find stop character.
-        if (sampled_token_index == 5 or len(decoded_seq_code) > 32):
+        if (sampled_token_index == 5 or len(decoded_seq_code) > 33):
             stop_condition = True
 
         target_seq = output_tokens
@@ -169,6 +181,7 @@ def seq2seq_mt_model(encoder_input_data, decoder_input_data, decoder_target_data
 
     print(decoded_seq_code)
     print(decoded_seq_code.shape)
+    return decoded_seq_code[1:]
 
 encoder_input, decoder_input, decoder_target = get_motif_from_family()
 # print(encoder_input.shape)
@@ -183,4 +196,7 @@ dec_in_val = np.array([decoder_input[-1:]])
 dec_tar_val = np.array([decoder_target[-1:]])
 
 # print(enc_in_val.shape)
-seq2seq_mt_model(enc_in_train, dec_in_train, dec_tar_train, enc_in_val)
+dec_out = seq2seq_mt_model(enc_in_train, dec_in_train, dec_tar_train, enc_in_val)
+mean_motif_column_dist(dec_out, dec_tar_val)
+
+
