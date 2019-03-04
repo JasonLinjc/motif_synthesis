@@ -197,6 +197,6 @@ dec_tar_val = np.array([decoder_target[-1:]])
 
 # print(enc_in_val.shape)
 dec_out = seq2seq_mt_model(enc_in_train, dec_in_train, dec_tar_train, enc_in_val)
-mean_motif_column_dist(dec_out, dec_tar_val)
+# mean_motif_column_dist(dec_out, dec_tar_val)
 
 

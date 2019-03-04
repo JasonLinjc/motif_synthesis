@@ -191,7 +191,7 @@ def seq2seq_model():
     print(x_train.shape)
     print(y_train.shape)
     RNN = layers.LSTM
-    HIDDEN_SIZE = 64
+    HIDDEN_SIZE = 256
     BATCH_SIZE = 1
     LAYERS = 1
     MAX_IN = 33
@@ -254,7 +254,7 @@ def mean_motif_column_dist(pred_seq, true_seq):
     max_idx = min([pred_stop_idx, true_top_idx])
     # print(len_)
     for i in range(max_idx + 1):
-        sum_dist += np.sqrt(sum((true_seq[i,:4] - pred_seq[i,:4])**2))
+        sum_dist += np.sqrt(sum((true_seq[i,:] - pred_seq[i,:])**2))
     print(sum_dist/(max_idx + 1))
 
 seq2seq_model()
