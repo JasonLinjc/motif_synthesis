@@ -147,7 +147,7 @@ def seq2seq_mt_model(encoder_input_data, decoder_input_data, decoder_target_data
     target_seq = np.zeros((1, 1, target_dim))
 
     # Populate the first character of target sequence with the start character
-    target_seq[0, 0, -1] = 1
+    target_seq[0, 0, -2] = 1
 
     stop_condition = False
     decoded_seq_code = np.zeros((1,1,6))
