@@ -219,7 +219,7 @@ def seq2seq_model():
     # Apply a dense layer to the every temporal slice of an input. For each of step
     # of the output sequence, decide which character should be chosen.
     model.add(layers.TimeDistributed(layers.Dense(CODE_LEN, activation='softmax')))
-    model.compile(loss='mean_squared_error',
+    model.compile(loss='categorical_crossentropy',
                   optimizer='adam',
                   metrics=['mae'])
     model.summary()

@@ -81,11 +81,26 @@ def get_motif_from_family(family_name = "bHLH_Homeo"):
     # print(motif)
     return np.array(encoder_input), np.array(decoder_input), np.array(decoder_target)
 
-def seq2seq_mt_model(encoder_input_data, decoder_input_data, decoder_target_data):
+def leave_one_validation():
+    encoder_input, decoder_input, decoder_target = get_motif_from_family()
+    # print(encoder_input.shape)
+    # print(decoder_input.shape)
+    # print(decoder_target.shape)
+    num_motifs = len(encoder_input)
+    enc_in_train = encoder_input[:-1]
+    dec_in_train = decoder_input[:-1]
+    dec_tar_train = decoder_target[:-1]
+
+    enc_in_val = np.array([encoder_input[-1]])
+    dec_in_val = np.array([decoder_input[-1:]])
+    dec_tar_val = np.array([decoder_target[-1:]])
+
+
+def seq2seq_mt_model(encoder_input_data, decoder_input_data, decoder_target_data, test_data):
     # define an input sequence and process it
     batch_size = 1
     epochs = 200
-    latent_dim = 128
+    latent_dim = 64
     input_dim = 4
     target_dim = 6
     encoder_inputs = Input(shape=(None, input_dim))
@@ -95,9 +110,9 @@ def seq2seq_mt_model(encoder_input_data, decoder_input_data, decoder_target_data
     encoder_states = [state_h, state_c]
 
     # Set up the decoder, using 'encoder_states' as initial state
-    decoder_inputs = Input(shape=(None, input_dim))
+    decoder_inputs = Input(shape=(None, target_dim))
 
-    decoder_lstm = LSTM(latent_dim, return_squence=True, return_state=True)
+    decoder_lstm = LSTM(latent_dim, return_sequences=True, return_state=True)
     decoder_outputs, _, _ = decoder_lstm(decoder_inputs, initial_state=encoder_states)
     decoder_dense = Dense(target_dim, activation='softmax')
     decoder_outputs = decoder_dense(decoder_outputs)
@@ -125,7 +140,7 @@ def seq2seq_mt_model(encoder_input_data, decoder_input_data, decoder_target_data
 
     # decode sequence
     # Encode the input as state vectors
-    input_seq = ""
+    input_seq = test_data
     states_value = encoder_model.predict(input_seq)
 
     # Generate empty target sequence of length 1
@@ -135,29 +150,25 @@ def seq2seq_mt_model(encoder_input_data, decoder_input_data, decoder_target_data
     target_seq[0, 0, -1] = 1
 
     stop_condition = False
-    decoded_seq_code = []
+    decoded_seq_code = np.zeros((1,1,6))
 
     while not stop_condition:
         output_tokens, h, c = decoder_model.predict([target_seq] + states_value)
-
-        decoded_seq_code += output_tokens
+        # print(output_tokens.shape)
+        # print(output_tokens)
+        decoded_seq_code = np.concatenate((decoded_seq_code, output_tokens))
         # Sample a token
-        sampled_token_index = np.argmax(output_tokens[0, 1, :])
+        sampled_token_index = np.argmax(output_tokens[0, 0, :])
 
         # Exit condition: either hit max length or find stop character.
-        if (sampled_token_index == 5 or len(decoded_seq_code) > 32*6):
+        if (sampled_token_index == 5 or len(decoded_seq_code) > 32):
             stop_condition = True
 
         target_seq = output_tokens
-
         states_value = [h, c]
 
-
-
-
-
-
-
+    print(decoded_seq_code)
+    print(decoded_seq_code.shape)
 
 encoder_input, decoder_input, decoder_target = get_motif_from_family()
 # print(encoder_input.shape)
@@ -167,6 +178,9 @@ enc_in_train = encoder_input[:-1]
 dec_in_train = decoder_input[:-1]
 dec_tar_train = decoder_target[:-1]
 
-print(enc_in_train.shape)
-print(dec_in_train.shape)
+enc_in_val = np.array([encoder_input[-1]])
+dec_in_val = np.array([decoder_input[-1:]])
+dec_tar_val = np.array([decoder_target[-1:]])
 
+# print(enc_in_val.shape)
+seq2seq_mt_model(enc_in_train, dec_in_train, dec_tar_train, enc_in_val)
