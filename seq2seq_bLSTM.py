@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Time     :2/28/19 11:14 AM
 # @Auther   :Jason Lin
-# @File     :seq2seq_MT.py
+# @File     :seq2seq_bLSTM.py
 # @Software :PyCharm
 
 import pickle as pkl
@@ -12,11 +12,12 @@ import h5py
 from keras.models import Model
 from keras.layers import Input, LSTM, Dense
 from keras.optimizers import Adam
+from keras.layers import Bidirectional, Concatenate
 from sklearn.model_selection import LeaveOneOut
 from numpy.random import seed
 seed(6)
 from tensorflow import set_random_seed
-set_random_seed(666)
+set_random_seed(6)
 
 def generate_input_motif_seq():
     max_dimer_len = 31 + 2
@@ -141,27 +142,35 @@ def leave_one_validation():
 
 def seq2seq_mt_model(encoder_input_data, decoder_input_data, decoder_target_data, test_data):
     # define an input sequence and process it
+
+    # encoder_outputs, forward_h, forward_c, backward_h, backward_c = encoder(encoder_inputs)
+
     batch_size = 1
     epochs = 200
-    latent_dim = 512
+    latent_dim = 200
     input_dim = 4
     target_dim = 6
     encoder_inputs = Input(shape=(None, input_dim))
     encoder = LSTM(latent_dim, return_state=True)
-    encoder_ouputs, state_h, state_c = encoder(encoder_inputs)
+    # encoder_outputs, state_h, state_c = encoder(encoder_inputs)
 
+    encoder = Bidirectional(LSTM(latent_dim, return_state=True))
+    encoder_outputs, forward_h, forward_c, backward_h, backward_c = encoder(encoder_inputs)
+    state_h = Concatenate()([forward_h, backward_h])
+    state_c = Concatenate()([forward_c, backward_c])
     encoder_states = [state_h, state_c]
 
     # Set up the decoder, using 'encoder_states' as initial state
     decoder_inputs = Input(shape=(None, target_dim))
 
-    decoder_lstm = LSTM(latent_dim, return_sequences=True, return_state=True)
+    decoder_lstm = LSTM(latent_dim * 2, return_sequences=True, return_state=True)
     decoder_outputs, _, _ = decoder_lstm(decoder_inputs, initial_state=encoder_states)
     decoder_dense = Dense(target_dim, activation='softmax')
     decoder_outputs = decoder_dense(decoder_outputs)
     #  Define the model that will turn
     #  encoder_input_data & decoder_input_data into decoder_target_data
     model = Model([encoder_inputs, decoder_inputs], decoder_outputs)
+    print(model.summary())
     model.compile(optimizer=Adam(lr=0.01, beta_1=0.9, beta_2=0.999, decay=0.001), loss='categorical_crossentropy')
     model.fit([encoder_input_data, decoder_input_data], decoder_target_data,
               batch_size=batch_size,
@@ -170,8 +179,8 @@ def seq2seq_mt_model(encoder_input_data, decoder_input_data, decoder_target_data
     # Define sampling models
     encoder_model = Model(encoder_inputs, encoder_states)
 
-    decoder_state_input_h = Input(shape=(latent_dim,))
-    decoder_state_input_c = Input(shape=(latent_dim,))
+    decoder_state_input_h = Input(shape=(latent_dim*2,))
+    decoder_state_input_c = Input(shape=(latent_dim*2,))
     decoder_states_inputs = [decoder_state_input_h, decoder_state_input_c]
     decoder_outputs, state_h, state_c = decoder_lstm(
         decoder_inputs, initial_state=decoder_states_inputs)
