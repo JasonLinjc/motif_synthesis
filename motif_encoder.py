@@ -14,6 +14,7 @@ class motif_pair_encoder:
     def __init__(self, motif1_seq, motif2_seq):
         self.motif1_seq = motif1_seq
         self.motif2_seq = motif2_seq
+        self.encode_motif_pair()
 
     def encode_motif_pair(self):
         pair_code  =  []
@@ -23,8 +24,9 @@ class motif_pair_encoder:
             start_idx = i * 4
             end_idx = start_idx + 4
             code[start_idx, end_idx] = motif_pair[i]
-            
-
+            pair_code.append(code)
+        pair_code = np.array(pair_code)
+        self.motif_pair_code = pair_code
 
 
 motif_data = pkl.load(open("./dimer_motif_pair.pkl", "rb"))
