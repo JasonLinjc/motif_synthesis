@@ -18,10 +18,10 @@ from numpy.random import seed
 seed(6)
 from tensorflow import set_random_seed
 set_random_seed(6)
+import motif_encoder
+
 
 def generate_input_motif_seq():
-    max_dimer_len = 31 + 2
-    max_motif_pair_len = 32
     data = []
     motif_data = pkl.load(open("./dimer_motif_pair.pkl", "rb"))
     for motif in motif_data:
@@ -38,36 +38,20 @@ def generate_input_motif_seq():
         dimer_seq = dimer_dict[dimer_name]
         motif1_seq = motif1_dict[motif1_name]
         motif2_seq = motif2_dict[motif2_name]
-
         # print(dimer_seq)
-        divied_vec = np.ones(4)
         if motif1_seq == " " or motif2_seq == " ":
             continue
-        motif_pair_seq = np.concatenate((motif1_seq, [divied_vec], motif2_seq))
-        # print(len(motif_pair_seq))
-        motif_padding_len = max_motif_pair_len + 1 - len(motif_pair_seq)
-        padding_vec = np.zeros((motif_padding_len, 4))
-        motif_pair_seq = np.concatenate((motif_pair_seq, padding_vec))
-        # print(motif_pair_seq.shape)
-        # print(motif_pair_seq)
-        start_code = np.array([[0.,0.,0.,0.,1.,0.]])
-        end_code = np.array([[0.,0.,0.,0.,0.,1.]])
-        dimer_input = np.concatenate((dimer_seq, np.zeros((len(dimer_seq), 2))), axis=1)
-        # print(dimer_input.shape)
-        # print(end_code.shape)
-        dimer_target = np.concatenate((dimer_input, end_code), axis=0)
-        dimer_input = np.concatenate((start_code, dimer_input, end_code), axis=0)
 
-        dimer_padding_len = max_dimer_len - len(dimer_target)
-        padding_vec = np.zeros((dimer_padding_len, 6))
-        dimer_target = np.concatenate((dimer_target, padding_vec))
+        m = motif_encoder.motif_pair_encoder(motif1_seq, motif2_seq, dimer_seq)
+        motif_pair_seq = m.motif_pair_code
+        dimer_input = m.dimer_input_code
+        dimer_target = m.dimer_target_code
 
-        dimer_padding_len = max_dimer_len - len(dimer_input)
-        padding_vec = np.zeros((dimer_padding_len, 6))
-        dimer_input = np.concatenate((dimer_input, padding_vec))
         # print(dimer_seq.shape)
+        # print(motif_pair_seq.shape)
         # print(dimer_seq)
         data.append([motif_pair_name, motif_pair_seq, dimer_name, dimer_input, dimer_target, dimer_family])
+
     return data
 
 def get_motif_from_family(family_name = "bHLH_Homeo"):
@@ -78,14 +62,17 @@ def get_motif_from_family(family_name = "bHLH_Homeo"):
     decoder_input = []
     decoder_target = []
     for d in data:
-        if d[-1] == "bHLH_Homeo":
+        if d[-1] == family_name:
             encoder_input.append(d[1])
             decoder_input.append(d[3])
             decoder_target.append(d[4])
-            motif.append(d)
-
+            # motif.append(d)
     # print(motif)
-    return np.array(encoder_input), np.array(decoder_input), np.array(decoder_target)
+
+    encoder_input = np.array(encoder_input)
+    decoder_input = np.array(decoder_input)
+    decoder_target = np.array(decoder_target)
+    return encoder_input, decoder_input, decoder_target
 
 def mean_motif_column_dist(pred_seq, true_seq):
     sum_dist = 0
@@ -123,6 +110,8 @@ def leave_one_validation():
     loo = LeaveOneOut()
     loo.get_n_splits(encoder_input)
 
+    print(encoder_input.shape)
+
     for train_index, test_index in loo.split(encoder_input):
         enc_in_train = encoder_input[train_index]
         dec_in_train = decoder_input[train_index]
@@ -132,9 +121,15 @@ def leave_one_validation():
         dec_in_test = decoder_input[test_index]
         dec_tar_test = decoder_target[test_index]
 
+        print(enc_in_train.shape)
+        # print(enc_in_train)
+        print(dec_tar_train.shape)
+        print(enc_in_test.shape)
+
         dec_out = seq2seq_mt_model(enc_in_train, dec_in_train, dec_tar_train, enc_in_test)
         res = mean_motif_column_dist(dec_out, dec_tar_val)
         dist_res.append(res)
+
     dist_res = np.array(dist_res)
     print(np.mean(dist_res), np.std(dist_res))
     print(dist_res)
@@ -147,9 +142,9 @@ def seq2seq_mt_model(encoder_input_data, decoder_input_data, decoder_target_data
 
     batch_size = 1
     epochs = 200
-    latent_dim = 200
-    input_dim = 4
-    target_dim = 6
+    latent_dim = 256
+    input_dim = 128
+    target_dim = 126
     encoder_inputs = Input(shape=(None, input_dim))
     encoder = LSTM(latent_dim, return_state=True)
     # encoder_outputs, state_h, state_c = encoder(encoder_inputs)

@@ -9,27 +9,47 @@ import pandas as pd
 import pickle as pkl
 
 class motif_pair_encoder:
-    max_pair_len = 31
-
-    def __init__(self, motif1_seq, motif2_seq):
+    max_pair_len = 32
+    max_dimer_len = 31
+    def __init__(self, motif1_seq, motif2_seq, dimer_seq):
         self.motif1_seq = motif1_seq
         self.motif2_seq = motif2_seq
+        self.dimer_seq = dimer_seq
         self.encode_motif_pair()
+        self.encode_dimer()
 
     def encode_motif_pair(self):
-        pair_code  =  []
-        motif_pair = np.concatenate((motif1_seq, motif2_seq), axis=0)
+        pair_code  =  np.zeros((self.max_pair_len, self.max_pair_len * 4))
+        motif_pair = np.concatenate((self.motif1_seq, self.motif2_seq), axis=0)
         for i in range(len(motif_pair)):
-            code = np.zeros(self.max_pair_len * 4)
+            # code = np.zeros(self.max_pair_len * 4)
             start_idx = i * 4
             end_idx = start_idx + 4
-            code[start_idx, end_idx] = motif_pair[i]
-            pair_code.append(code)
-        pair_code = np.array(pair_code)
+            pair_code[i, start_idx:end_idx] = motif_pair[i]
+            # pair_code.append(code)
         self.motif_pair_code = pair_code
 
+    def encode_dimer(self):
+        dimer_code = np.zeros((self.max_dimer_len, self.max_dimer_len * 4 + 2))
+        for i in range(len(self.dimer_seq)):
+            start_idx = i * 4
+            end_idx = start_idx + 4
+            dimer_code[i, start_idx+1:end_idx+1] = self.dimer_seq[i]
 
+        dimer_code = np.array(dimer_code)
+        start_code = np.zeros(self.max_dimer_len * 4 + 2)
+        start_code[0] = 1.
+        end_code = np.zeros(self.max_dimer_len * 4 + 2)
+        end_code[-1] = 1.
+        dimer_input = np.concatenate(([start_code], dimer_code, [end_code]), axis=0)
+        dimer_target = np.concatenate((dimer_code, [end_code], [np.zeros(self.max_dimer_len * 4 + 2)]), axis=0)
+        self.dimer_input_code = dimer_input
+        self.dimer_target_code = dimer_target
+
+
+"""
 motif_data = pkl.load(open("./dimer_motif_pair.pkl", "rb"))
+
 for motif in motif_data:
     dimer_dict = motif[0]
     motif1_dict = motif[1]
@@ -45,9 +65,21 @@ for motif in motif_data:
     motif1_seq = motif1_dict[motif1_name]
     motif2_seq = motif2_dict[motif2_name]
 
-    print(motif1_seq)
+    # print(motif1_seq)
+    m = motif_pair_encoder(motif1_seq, motif2_seq, dimer_seq)
+    print(m.motif_pair_code.shape)
+    print(m.dimer_input_code.shape)
+    # print(m.dimer_input_code)
+    # print(m.dimer_target_code)
+    # print(m.motif_pair_code)
 
-    break
+"""
+
+
+
+
+
+
 
 
 

@@ -82,7 +82,6 @@ def get_motif_from_family(family_name = "bHLH_Homeo"):
             decoder_input.append(d[3])
             decoder_target.append(d[4])
             motif.append(d)
-
     # print(motif)
     return np.array(encoder_input), np.array(decoder_input), np.array(decoder_target)
 
@@ -112,12 +111,11 @@ def mean_motif_column_dist(pred_seq, true_seq):
 
     # reverse_true_seq = true_seq[::-1]
 
-
 def leave_one_validation():
     encoder_input, decoder_input, decoder_target = get_motif_from_family()
-    # print(encoder_input.shape)
-    # print(decoder_input.shape)
-    # print(decoder_target.shape)
+    print(encoder_input.shape)
+    print(decoder_input.shape)
+    print(decoder_target.shape)
     dist_res = []
     loo = LeaveOneOut()
     loo.get_n_splits(encoder_input)
