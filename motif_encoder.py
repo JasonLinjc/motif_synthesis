@@ -47,6 +47,13 @@ class motif_pair_encoder:
         self.dimer_target_code = dimer_target
 
 
+class pred_dimer_decoder:
+    def __init__(self, pred_dimer_code):
+        self.pred_dimer_code = pred_dimer_code
+
+
+
+
 """
 motif_data = pkl.load(open("./dimer_motif_pair.pkl", "rb"))
 

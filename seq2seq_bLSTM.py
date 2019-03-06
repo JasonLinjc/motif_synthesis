@@ -127,18 +127,21 @@ def leave_one_validation():
         print(enc_in_test.shape)
 
         dec_out = seq2seq_mt_model(enc_in_train, dec_in_train, dec_tar_train, enc_in_test)
-        res = mean_motif_column_dist(dec_out, dec_tar_val)
-        dist_res.append(res)
+        print(dec_out)
+        print(dec_out.shape)
+        sf = dec_out.reshape((dec_out.shape[0], dec_out.shape[-1]))
+        np.savetxt('test.out', sf, delimiter=',', fmt='%.6f')
+        # res = mean_motif_column_dist(dec_out, dec_tar_val)
+        # dist_res.append(res)
+        break
 
-    dist_res = np.array(dist_res)
-    print(np.mean(dist_res), np.std(dist_res))
-    print(dist_res)
+    #  dist_res = np.array(dist_res)
+    #  print(np.mean(dist_res), np.std(dist_res))
+    #  print(dist_res)
 
 
 def seq2seq_mt_model(encoder_input_data, decoder_input_data, decoder_target_data, test_data):
     # define an input sequence and process it
-
-    # encoder_outputs, forward_h, forward_c, backward_h, backward_c = encoder(encoder_inputs)
 
     batch_size = 1
     epochs = 200
@@ -197,7 +200,7 @@ def seq2seq_mt_model(encoder_input_data, decoder_input_data, decoder_target_data
     target_seq[0, 0, -2] = 1
 
     stop_condition = False
-    decoded_seq_code = np.zeros((1,1,6))
+    decoded_seq_code = np.zeros((1,1,126))
 
     while not stop_condition:
         output_tokens, h, c = decoder_model.predict([target_seq] + states_value)
@@ -207,7 +210,7 @@ def seq2seq_mt_model(encoder_input_data, decoder_input_data, decoder_target_data
         # Sample a token
         sampled_token_index = np.argmax(output_tokens[0, 0, :])
         # Exit condition: either hit max length or find stop character.
-        if (sampled_token_index == 5 or len(decoded_seq_code) > 33):
+        if (sampled_token_index == 125 or len(decoded_seq_code) > 33):
             stop_condition = True
 
         target_seq = output_tokens
