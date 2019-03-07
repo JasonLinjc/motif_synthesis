@@ -163,6 +163,7 @@ def get_motif_from_family(family_name = "bHLH_Homeo"):
     return np.array(x_train), np.array(y_train)
 
 def get_rev_com_y(seq_mat):
+
     print(seq_mat)
     print("-"*50)
     reversed_mat = seq_mat[::-1].copy()
@@ -246,7 +247,6 @@ def mean_motif_column_dist(pred_seq, true_seq):
     sum_dist = 0
     # len_pred = len(np.arange(len(pred_seq))[pred_seq[:, -1] < 0.9])
     # len_true = len(np.arange(len(true_seq))[true_seq[:, -1] == 0])
-
     pred_stop_idx = max(np.arange(len(pred_seq))[pred_seq[:, -1] < 0.9])
     true_top_idx =  max(np.arange(len(true_seq))[true_seq[:, -1] == 0])
 

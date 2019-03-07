@@ -7,6 +7,7 @@
 import numpy as np
 import pandas as pd
 import pickle as pkl
+import seq2seq_MT
 
 class motif_pair_encoder:
     max_pair_len = 32
@@ -48,10 +49,68 @@ class motif_pair_encoder:
 
 
 class pred_dimer_decoder:
+    dimer_code_len = 126
     def __init__(self, pred_dimer_code):
         self.pred_dimer_code = pred_dimer_code
+        self.decode_dimer_code()
+
+    def decode_dimer_code(self):
+        four_dim_dimer = []
+        for i in range(len(self.pred_dimer_code)-1):
+            start_idx = i*4+1
+            end_idx = i*4+5
+            code = self.pred_dimer_code[i,0, start_idx:end_idx].copy()
+            # code = code/sum(code)
+            four_dim_dimer.append(code)
+        self.four_dim_dimer = np.array(four_dim_dimer)
+
+    def decode_dimer_code_2(self):
+        pass
+
+    def mean_motif_column_dist(self, true_dimer):
+        self.true_dimer_code = true_dimer[0]
+        print(self.true_dimer_code)
+        # print(true_dimer_code)
+        true_len = len(self.true_dimer_code)
+        pred_len = len(self.four_dim_dimer)
+        print("true_len:", true_len, "pred_len:", pred_len)
+        len_ = min([true_len, pred_len])
+        sum_dist = 0
+        # print(self.true_dimer_code)
+        for i in range(len_):
+            sum_dist += np.sqrt(sum((self.true_dimer_code[i] - self.four_dim_dimer[i]) ** 2))
+        res = sum_dist / (len_)
+        return res
+
+"""
+f = open("test1.out","r")
+dimer = f.read()
+dimer_code = np.loadtxt("test1.out", delimiter=',')
+dimer_code = dimer_code.reshape((dimer_code.shape[0], 1, dimer_code.shape[-1]))
+print(dimer_code.shape)
+
+p = pred_dimer_decoder(dimer_code)
+print(p.four_dim_dimer)
+# print(np.sum(p.four_dim_dimer, axis=1))
 
 
+encoder_input, decoder_input, decoder_target = seq2seq_MT.get_motif_from_family()
+# print(encoder_input.shape)
+# print(decoder_input.shape)
+# print(decoder_target.shape)
+enc_in_train = encoder_input[:-1]
+dec_in_train = decoder_input[:-1]
+dec_tar_train = decoder_target[:-1]
+
+enc_in_val = np.array(encoder_input[-1:])
+dec_in_val = np.array(decoder_input[-1:])
+dec_tar_val = np.array(decoder_target[-1:])
+
+# print(dec_tar_val.shape)
+dist = p.mean_motif_column_dist(dec_tar_val)
+print(dist)
+
+"""
 
 
 """

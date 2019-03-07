@@ -24,6 +24,7 @@ import motif_encoder
 def generate_input_motif_seq():
     data = []
     motif_data = pkl.load(open("./dimer_motif_pair.pkl", "rb"))
+    # print(motif_data)
     for motif in motif_data:
         dimer_dict = motif[0]
         motif1_dict = motif[1]
@@ -50,29 +51,32 @@ def generate_input_motif_seq():
         # print(dimer_seq.shape)
         # print(motif_pair_seq.shape)
         # print(dimer_seq)
-        data.append([motif_pair_name, motif_pair_seq, dimer_name, dimer_input, dimer_target, dimer_family])
+        data.append([motif_pair_name, motif_pair_seq, dimer_name, dimer_input, dimer_target, dimer_family, dimer_seq])
 
     return data
 
 def get_motif_from_family(family_name = "bHLH_Homeo"):
     # data = generate_input_motif_seq()
     data = generate_input_motif_seq()
-    motif = []
+    # print(data)
+    true_dimer = []
     encoder_input = []
     decoder_input = []
     decoder_target = []
+
     for d in data:
-        if d[-1] == family_name:
+        if d[-2] == family_name:
             encoder_input.append(d[1])
             decoder_input.append(d[3])
             decoder_target.append(d[4])
-            # motif.append(d)
+            true_dimer.append(d[6])
     # print(motif)
 
     encoder_input = np.array(encoder_input)
     decoder_input = np.array(decoder_input)
     decoder_target = np.array(decoder_target)
-    return encoder_input, decoder_input, decoder_target
+    true_dimer = np.array(true_dimer)
+    return encoder_input, decoder_input, decoder_target, true_dimer
 
 def mean_motif_column_dist(pred_seq, true_seq):
     sum_dist = 0
@@ -102,7 +106,7 @@ def mean_motif_column_dist(pred_seq, true_seq):
 
 
 def leave_one_validation():
-    encoder_input, decoder_input, decoder_target = get_motif_from_family()
+    encoder_input, decoder_input, decoder_target, ture_dimer = get_motif_from_family()
     # print(encoder_input.shape)
     # print(decoder_input.shape)
     # print(decoder_target.shape)
@@ -121,16 +125,23 @@ def leave_one_validation():
         dec_in_test = decoder_input[test_index]
         dec_tar_test = decoder_target[test_index]
 
+        true_dimer_test = true_dimer[test_index]
+
         print(enc_in_train.shape)
         # print(enc_in_train)
         print(dec_tar_train.shape)
         print(enc_in_test.shape)
+        print(true_dimer.shape)
 
         dec_out = seq2seq_mt_model(enc_in_train, dec_in_train, dec_tar_train, enc_in_test)
-        print(dec_out)
-        print(dec_out.shape)
-        sf = dec_out.reshape((dec_out.shape[0], dec_out.shape[-1]))
-        np.savetxt('test.out', sf, delimiter=',', fmt='%.6f')
+        dimer = motif_encoder.pred_dimer_decoder(dec_out)
+        print(dimer.four_dim_dimer)
+        amc_dist = dimer.mean_motif_column_dist(true_dimer)
+        # print(dimer.true_dimer_code)
+        # print(true_dimer_test)
+        print(amc_dist)
+        # sf = dec_out.reshape((dec_out.shape[0], dec_out.shape[-1]))
+        # np.savetxt('test.out', sf, delimiter=',', fmt='%.6f')
         # res = mean_motif_column_dist(dec_out, dec_tar_val)
         # dist_res.append(res)
         break
@@ -145,7 +156,7 @@ def seq2seq_mt_model(encoder_input_data, decoder_input_data, decoder_target_data
 
     batch_size = 1
     epochs = 200
-    latent_dim = 256
+    latent_dim = 128
     input_dim = 128
     target_dim = 126
     encoder_inputs = Input(shape=(None, input_dim))
@@ -220,7 +231,7 @@ def seq2seq_mt_model(encoder_input_data, decoder_input_data, decoder_target_data
     print(decoded_seq_code.shape)
     return decoded_seq_code[1:]
 
-encoder_input, decoder_input, decoder_target = get_motif_from_family()
+encoder_input, decoder_input, decoder_target, true_dimer = get_motif_from_family()
 # print(encoder_input.shape)
 # print(decoder_input.shape)
 # print(decoder_target.shape)
@@ -231,6 +242,8 @@ dec_tar_train = decoder_target[:-1]
 enc_in_val = np.array(encoder_input[-1:])
 dec_in_val = np.array(decoder_input[-1:])
 dec_tar_val = np.array(decoder_target[-1:])
+
+# print(true_dimer[0])
 
 # print(dec_tar_val.shape)
 # dec_out = seq2seq_mt_model(enc_in_train, dec_in_train, dec_tar_train, enc_in_val)

@@ -130,11 +130,13 @@ def leave_one_validation():
         dec_tar_test = decoder_target[test_index]
 
         dec_out = seq2seq_mt_model(enc_in_train, dec_in_train, dec_tar_train, enc_in_test)
-        res = mean_motif_column_dist(dec_out, dec_tar_val)
+        res = mean_motif_column_dist(dec_out, dec_tar_test)
         dist_res.append(res)
+        break
     dist_res = np.array(dist_res)
     print(np.mean(dist_res), np.std(dist_res))
     print(dist_res)
+
 
 
 def seq2seq_mt_model(encoder_input_data, decoder_input_data, decoder_target_data, test_data):
@@ -210,7 +212,7 @@ def seq2seq_mt_model(encoder_input_data, decoder_input_data, decoder_target_data
     # print(decoded_seq_code)
     print(decoded_seq_code.shape)
     return decoded_seq_code[1:]
-
+"""
 encoder_input, decoder_input, decoder_target = get_motif_from_family()
 # print(encoder_input.shape)
 # print(decoder_input.shape)
@@ -228,3 +230,6 @@ dec_tar_val = np.array(decoder_target[-1:])
 # mean_motif_column_dist(dec_out, dec_tar_val)
 
 leave_one_validation()
+
+
+"""
