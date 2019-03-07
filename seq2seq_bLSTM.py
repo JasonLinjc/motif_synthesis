@@ -106,7 +106,7 @@ def mean_motif_column_dist(pred_seq, true_seq):
 
 
 def leave_one_validation():
-    encoder_input, decoder_input, decoder_target, ture_dimer = get_motif_from_family()
+    encoder_input, decoder_input, decoder_target, true_dimer = get_motif_from_family()
     # print(encoder_input.shape)
     # print(decoder_input.shape)
     # print(decoder_target.shape)
@@ -126,7 +126,7 @@ def leave_one_validation():
         dec_tar_test = decoder_target[test_index]
 
         true_dimer_test = true_dimer[test_index]
-
+        print("test_index:", test_index)
         print(enc_in_train.shape)
         # print(enc_in_train)
         print(dec_tar_train.shape)
@@ -143,12 +143,11 @@ def leave_one_validation():
         # sf = dec_out.reshape((dec_out.shape[0], dec_out.shape[-1]))
         # np.savetxt('test.out', sf, delimiter=',', fmt='%.6f')
         # res = mean_motif_column_dist(dec_out, dec_tar_val)
-        # dist_res.append(res)
-        break
+        dist_res.append(amc_dist)
 
-    #  dist_res = np.array(dist_res)
-    #  print(np.mean(dist_res), np.std(dist_res))
-    #  print(dist_res)
+    dist_res = np.array(dist_res)
+    print(dist_res)
+    print(np.mean(dist_res), np.std(dist_res))
 
 
 def seq2seq_mt_model(encoder_input_data, decoder_input_data, decoder_target_data, test_data):
@@ -244,7 +243,6 @@ dec_in_val = np.array(decoder_input[-1:])
 dec_tar_val = np.array(decoder_target[-1:])
 
 # print(true_dimer[0])
-
 # print(dec_tar_val.shape)
 # dec_out = seq2seq_mt_model(enc_in_train, dec_in_train, dec_tar_train, enc_in_val)
 # mean_motif_column_dist(dec_out, dec_tar_val)

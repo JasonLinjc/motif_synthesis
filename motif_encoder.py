@@ -74,13 +74,30 @@ class pred_dimer_decoder:
         true_len = len(self.true_dimer_code)
         pred_len = len(self.four_dim_dimer)
         print("true_len:", true_len, "pred_len:", pred_len)
-        len_ = min([true_len, pred_len])
-        sum_dist = 0
+        # len_ = min([true_len, pred_len])
+        len_ = 0
+        dist_list = []
         # print(self.true_dimer_code)
-        for i in range(len_):
-            sum_dist += np.sqrt(sum((self.true_dimer_code[i] - self.four_dim_dimer[i]) ** 2))
-        res = sum_dist / (len_)
-        return res
+        if true_len <= pred_len:
+            len_ = true_len
+            gap_len  =  pred_len  - true_len
+            for i in range(gap_len + 1):
+                tem_dist = 0
+                for j in range(len_):
+                    tem_dist += np.sqrt(sum((self.true_dimer_code[j] - self.four_dim_dimer[j+i]) ** 2))
+                dist_list.append(tem_dist)
+        else:
+            len_ = pred_len
+            gap_len = true_len - pred_len
+            for i in range(gap_len + 1):
+                tem_dist = 0
+                for j in range(len_):
+                    tem_dist += np.sqrt(sum((self.true_dimer_code[j+i] - self.four_dim_dimer[j]) ** 2))
+                dist_list.append(tem_dist)
+        dist_list = np.array(dist_list)
+        res = dist_list/len_
+        print(res)
+        return min(res)
 
 """
 f = open("test1.out","r")
