@@ -97,7 +97,6 @@ def mean_motif_column_dist(pred_seq, true_seq):
     # rev_true_seq = np.array([true_seq[0][::-1]])
     for i in range(idx+1):
         rev_sum_dist += np.sqrt(sum((true_seq[0,idx-i,:4] - pred_seq[i,0,:4])**2))
-
     rev_res = rev_sum_dist/(idx+1)
 
     return min([rev_res, res])
@@ -155,7 +154,7 @@ def seq2seq_mt_model(encoder_input_data, decoder_input_data, decoder_target_data
 
     batch_size = 1
     epochs = 200
-    latent_dim = 128
+    latent_dim = 64
     input_dim = 128
     target_dim = 126
     encoder_inputs = Input(shape=(None, input_dim))

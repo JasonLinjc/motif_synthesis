@@ -77,27 +77,37 @@ class pred_dimer_decoder:
         # len_ = min([true_len, pred_len])
         len_ = 0
         dist_list = []
+        rev_dist_list = []
         # print(self.true_dimer_code)
         if true_len <= pred_len:
             len_ = true_len
             gap_len  =  pred_len  - true_len
             for i in range(gap_len + 1):
                 tem_dist = 0
+                rev_tem_dist = 0
                 for j in range(len_):
                     tem_dist += np.sqrt(sum((self.true_dimer_code[j] - self.four_dim_dimer[j+i]) ** 2))
+                    rev_tem_dist += np.sqrt(sum((self.true_dimer_code[len_-1-j] - self.four_dim_dimer[j+i]) ** 2))
                 dist_list.append(tem_dist)
+                rev_dist_list.append(rev_tem_dist)
         else:
             len_ = pred_len
             gap_len = true_len - pred_len
             for i in range(gap_len + 1):
                 tem_dist = 0
+                rev_tem_dist = 0
                 for j in range(len_):
                     tem_dist += np.sqrt(sum((self.true_dimer_code[j+i] - self.four_dim_dimer[j]) ** 2))
+                    rev_tem_dist += np.sqrt(sum((self.true_dimer_code[j+i] - self.four_dim_dimer[len_-1-j]) ** 2))
                 dist_list.append(tem_dist)
+                rev_dist_list.append(rev_tem_dist)
         dist_list = np.array(dist_list)
         res = dist_list/len_
+        rev_dist_list = np.array(rev_dist_list)
+        rev_res = rev_dist_list/len_
         print(res)
-        return min(res)
+        print(rev_res)
+        return min(np.concatenate((rev_res,res)))
 
 """
 f = open("test1.out","r")
