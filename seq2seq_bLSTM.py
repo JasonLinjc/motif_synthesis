@@ -178,7 +178,7 @@ def seq2seq_mt_model(encoder_input_data, decoder_input_data, decoder_target_data
     #  encoder_input_data & decoder_input_data into decoder_target_data
     model = Model([encoder_inputs, decoder_inputs], decoder_outputs)
     print(model.summary())
-    model.compile(optimizer=Adam(lr=0.01, beta_1=0.9, beta_2=0.999, decay=0.001), loss='categorical_crossentropy')
+    model.compile(optimizer='Adam', loss='categorical_crossentropy')
     model.fit([encoder_input_data, decoder_input_data], decoder_target_data,
               batch_size=batch_size,
               epochs=epochs)
