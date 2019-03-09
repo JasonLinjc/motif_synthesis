@@ -21,5 +21,24 @@ for (i in 1:length(DimerMotifFamily))
     j = j + 1
   }
 }
-print(dimer[[1]])
+
+vdimer = dimer[[2]]
+print(vdimer)
+split_motif = strsplit(vdimer, "_")[[1]]
+motif1 = split_motif[1]
+motif2 = split_motif[2]
+pfm_motif1 = HomodimerMotifDatabase[[motif1]]
+pfm_motif2 = MotifDatabase[[motif2]]
+pfm_dimer = DimerMotifDatabase[[vdimer]]
+rownames(pfm_motif1) = c('A','C','G','T')
+rownames(pfm_motif2) = c('A','C','G','T')
+rownames(pfm_dimer) = c('A','C','G','T')
+namelist = list('First_motif'=pfm_motif1, 'Second_motif'=pfm_motif2, 'dimer'=pfm_dimer)
+aa = ggseqlogo(namelist, ncol = 1, method='prob')
+plot(aa)
+
+# pfm = DimerMotifDatabase[[vdimer]]
+# print(vdimer)
+# rownames(pfm) = c('A','C','G','T')
+# ggseqlogo(pfm, method = 'prob')
 
