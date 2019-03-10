@@ -19,7 +19,7 @@ seed(6)
 from tensorflow import set_random_seed
 set_random_seed(6)
 import motif_encoder
-
+import os
 
 def generate_input_motif_seq():
     data = []
@@ -63,20 +63,22 @@ def get_motif_from_family(family_name = "bHLH_Homeo"):
     encoder_input = []
     decoder_input = []
     decoder_target = []
-
+    dimer = []
     for d in data:
         if d[-2] == family_name:
             encoder_input.append(d[1])
             decoder_input.append(d[3])
             decoder_target.append(d[4])
             true_dimer.append(d[6])
+            dimer.append(d[2])
     # print(motif)
 
     encoder_input = np.array(encoder_input)
     decoder_input = np.array(decoder_input)
     decoder_target = np.array(decoder_target)
     true_dimer = np.array(true_dimer)
-    return encoder_input, decoder_input, decoder_target, true_dimer
+    dimer = np.array(dimer)
+    return encoder_input, decoder_input, decoder_target, true_dimer, dimer
 
 def mean_motif_column_dist(pred_seq, true_seq):
     sum_dist = 0
@@ -105,14 +107,16 @@ def mean_motif_column_dist(pred_seq, true_seq):
 
 
 def leave_one_validation():
-    encoder_input, decoder_input, decoder_target, true_dimer = get_motif_from_family()
+    fname = "bZIP_bZIP"
+    encoder_input, decoder_input, decoder_target, true_dimer, dimer_name = get_motif_from_family(family_name=fname)
+
     # print(encoder_input.shape)
     # print(decoder_input.shape)
     # print(decoder_target.shape)
     dist_res = []
     loo = LeaveOneOut()
     loo.get_n_splits(encoder_input)
-
+    dn = []
     print(encoder_input.shape)
 
     for train_index, test_index in loo.split(encoder_input):
@@ -123,6 +127,8 @@ def leave_one_validation():
         enc_in_test = encoder_input[test_index]
         dec_in_test = decoder_input[test_index]
         dec_tar_test = decoder_target[test_index]
+
+        test_dimer_name = dimer_name[test_index]
 
         true_dimer_test = true_dimer[test_index]
         print("test_index:", test_index)
@@ -143,10 +149,24 @@ def leave_one_validation():
         # np.savetxt('test.out', sf, delimiter=',', fmt='%.6f')
         # res = mean_motif_column_dist(dec_out, dec_tar_val)
         dist_res.append(amc_dist)
+        dn.append(test_dimer_name[0])
+        save_pred_dimer(fname, test_dimer_name[0], dimer.four_dim_dimer)
 
     dist_res = np.array(dist_res)
     print(dist_res)
+    print(dn)
     print(np.mean(dist_res), np.std(dist_res))
+
+def save_pred_dimer(family_name, dimer_name, pred_dimer_code):
+    fold_name = "./pred_dimer/" + family_name
+    if not os.path.exists(fold_name):
+        os.makedirs(fold_name)
+
+    pred_dimer_code = pred_dimer_code.T
+    file_name = fold_name + "/" + dimer_name + ".pred.csv"
+    # pred_dimer_code = pred_dimer_code.reshape((pred_dimer_code.shape[0], pred_dimer_code.shape[-1]))
+    np.savetxt(file_name, pred_dimer_code, delimiter=",")
+
 
 
 def seq2seq_mt_model(encoder_input_data, decoder_input_data, decoder_target_data, test_data):
@@ -154,7 +174,7 @@ def seq2seq_mt_model(encoder_input_data, decoder_input_data, decoder_target_data
 
     batch_size = 1
     epochs = 200
-    latent_dim = 64
+    latent_dim = 100
     input_dim = 128
     target_dim = 126
     encoder_inputs = Input(shape=(None, input_dim))
@@ -229,17 +249,17 @@ def seq2seq_mt_model(encoder_input_data, decoder_input_data, decoder_target_data
     print(decoded_seq_code.shape)
     return decoded_seq_code[1:]
 
-encoder_input, decoder_input, decoder_target, true_dimer = get_motif_from_family()
+# encoder_input, decoder_input, decoder_target, true_dimer = get_motif_from_family()
 # print(encoder_input.shape)
 # print(decoder_input.shape)
 # print(decoder_target.shape)
-enc_in_train = encoder_input[:-1]
-dec_in_train = decoder_input[:-1]
-dec_tar_train = decoder_target[:-1]
+# enc_in_train = encoder_input[:-1]
+# dec_in_train = decoder_input[:-1]
+# dec_tar_train = decoder_target[:-1]
 
-enc_in_val = np.array(encoder_input[-1:])
-dec_in_val = np.array(decoder_input[-1:])
-dec_tar_val = np.array(decoder_target[-1:])
+# enc_in_val = np.array(encoder_input[-1:])
+# dec_in_val = np.array(decoder_input[-1:])
+# dec_tar_val = np.array(decoder_target[-1:])
 
 # print(true_dimer[0])
 # print(dec_tar_val.shape)
