@@ -55,11 +55,11 @@ visualise_motifs <- function(fname, dname)
 
 visualise_pred_dimer <- function(dimer_dir)
 {
+  print(dimer_dir)
   dimer_files = list.files(dimer_dir)
   # print(dimer_files)
   for (i in 1:length(dimer_files))
   {
-    
     # print(dimer_files[i][1])
     pred_dimer = (dimer_files[i])
     a <- read.table(paste(dimer_dir, pred_dimer, sep=""), header=FALSE, sep=',')
@@ -103,7 +103,8 @@ visualise_pred_dimer <- function(dimer_dir)
     dev.off()
   }
 }
-visualise_pred_dimer("~/year2semB/motif_synthesis/pred_dimer/")
+fname = "Homeo_Tbox"
+visualise_pred_dimer(paste("~/year2semB/motif_synthesis/pred_dimer/", fname,"/" ,sep=""))
 
 
 # pfm = DimerMotifDatabase[[vdimer]]
