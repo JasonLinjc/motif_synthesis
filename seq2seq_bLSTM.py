@@ -65,7 +65,9 @@ def get_motif_from_family(family_name = "bHLH_Homeo"):
     decoder_target = []
     dimer = []
     for d in data:
-        if d[-2] == family_name:
+        fname = d[5]
+        dname = d[2]
+        if fname == family_name and len(dname.split("_")) == 2:
             encoder_input.append(d[1])
             decoder_input.append(d[3])
             decoder_target.append(d[4])
@@ -107,7 +109,7 @@ def mean_motif_column_dist(pred_seq, true_seq):
 
 
 def leave_one_validation():
-    fname = "Homeo_Tbox"
+    fname = "bHLH_Homeo"
     encoder_input, decoder_input, decoder_target, true_dimer, dimer_name = get_motif_from_family(family_name=fname)
 
     # print(encoder_input.shape)
@@ -116,7 +118,7 @@ def leave_one_validation():
     dist_res = []
     loo = LeaveOneOut()
     loo.get_n_splits(encoder_input)
-    dn = []
+    dn = {}
     print(encoder_input.shape)
 
     for train_index, test_index in loo.split(encoder_input):
@@ -144,12 +146,12 @@ def leave_one_validation():
         amc_dist = dimer.mean_motif_column_dist(true_dimer)
         # print(dimer.true_dimer_code)
         # print(true_dimer_test)
-        print(amc_dist)
+        # print(amc_dist)
         # sf = dec_out.reshape((dec_out.shape[0], dec_out.shape[-1]))
         # np.savetxt('test.out', sf, delimiter=',', fmt='%.6f')
         # res = mean_motif_column_dist(dec_out, dec_tar_val)
         dist_res.append(amc_dist)
-        dn.append(test_dimer_name[0])
+        dn[test_dimer_name[0]] = amc_dist
         save_pred_dimer(fname, test_dimer_name[0], dimer.four_dim_dimer)
 
     dist_res = np.array(dist_res)
@@ -168,13 +170,12 @@ def save_pred_dimer(family_name, dimer_name, pred_dimer_code):
     np.savetxt(file_name, pred_dimer_code, delimiter=",")
 
 
-
 def seq2seq_mt_model(encoder_input_data, decoder_input_data, decoder_target_data, test_data):
     # define an input sequence and process it
 
     batch_size = 1
     epochs = 200
-    latent_dim = 100
+    latent_dim = 256
     input_dim = 128
     target_dim = 126
     encoder_inputs = Input(shape=(None, input_dim))
@@ -267,3 +268,4 @@ def seq2seq_mt_model(encoder_input_data, decoder_input_data, decoder_target_data
 # mean_motif_column_dist(dec_out, dec_tar_val)
 
 leave_one_validation()
+# print(generate_input_motif_seq()[2])

@@ -212,6 +212,7 @@ def seq2seq_mt_model(encoder_input_data, decoder_input_data, decoder_target_data
     # print(decoded_seq_code)
     print(decoded_seq_code.shape)
     return decoded_seq_code[1:]
+
 """
 encoder_input, decoder_input, decoder_target = get_motif_from_family()
 # print(encoder_input.shape)

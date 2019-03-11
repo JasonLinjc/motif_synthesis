@@ -107,7 +107,7 @@ fname = "Homeo_Tbox"
 visualise_pred_dimer(paste("~/year2semB/motif_synthesis/pred_dimer/", fname,"/" ,sep=""))
 
 
-# pfm = DimerMotifDatabase[[vdimer]]
+# pfm = DimerMotifDatabase[[vdimer]]s
 # print(vdimer)
 # rownames(pfm) = c('A','C','G','T')
 # ggseqlogo(pfm, method = 'prob')
@@ -115,6 +115,7 @@ visualise_pred_dimer(paste("~/year2semB/motif_synthesis/pred_dimer/", fname,"/" 
 # a <- read.table("year2semB/motif_synthesis/pred_dimer/CEBPG_CREB3L1_pred.csv", header=FALSE, se[=','])
 # data.matrix(a)
 # rownames(a) = c('A','C','G','T')
+
 
 
 
