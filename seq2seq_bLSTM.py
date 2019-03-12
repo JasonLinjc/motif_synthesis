@@ -108,6 +108,7 @@ def mean_motif_column_dist(pred_seq, true_seq):
     # reverse_true_seq = true_seq[::-1]
 
 
+
 def leave_one_validation():
     fname = "bHLH_Homeo"
     encoder_input, decoder_input, decoder_target, true_dimer, dimer_name = get_motif_from_family(family_name=fname)
