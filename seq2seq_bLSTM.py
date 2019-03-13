@@ -268,5 +268,5 @@ def seq2seq_mt_model(encoder_input_data, decoder_input_data, decoder_target_data
 # dec_out = seq2seq_mt_model(enc_in_train, dec_in_train, dec_tar_train, enc_in_val)
 # mean_motif_column_dist(dec_out, dec_tar_val)
 
-leave_one_validation()
+# leave_one_validation()
 # print(generate_input_motif_seq()[2])

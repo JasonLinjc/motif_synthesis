@@ -18,6 +18,7 @@ class motif_pair_encoder:
         self.dimer_seq = dimer_seq
         self.encode_motif_pair()
         self.encode_dimer()
+        # self.motif_pair2tensor()
 
     def encode_motif_pair(self):
         pair_code  =  np.zeros((self.max_pair_len, self.max_pair_len * 4))
@@ -46,6 +47,20 @@ class motif_pair_encoder:
         dimer_target = np.concatenate((dimer_code, [end_code], [np.zeros(self.max_dimer_len * 4 + 2)]), axis=0)
         self.dimer_input_code = dimer_input
         self.dimer_target_code = dimer_target
+
+    def motif_pair2tensor(self):
+        max_motif_len = 18
+        channel_len = 8
+        mp_tensor = np.zeros((max_motif_len, max_motif_len, channel_len))
+        for i in range(len(self.motif1_seq)):
+            for j in range(len(self.motif2_seq)):
+                m1 = self.motif1_seq[i]
+                m2 = self.motif2_seq[j]
+                z1 = m1 * m2
+                z2 = np.abs(m1 - m2)
+                z = np.concatenate((z1, z2))
+                mp_tensor[i, j] = z
+        return mp_tensor
 
 
 class pred_dimer_decoder:
@@ -160,13 +175,17 @@ for motif in motif_data:
 
     # print(motif1_seq)
     m = motif_pair_encoder(motif1_seq, motif2_seq, dimer_seq)
-    print(m.motif_pair_code.shape)
-    print(m.dimer_input_code.shape)
+    z = m.motif_pair2tensor()
+    print(z)
+    print(z.shape)
+    break
+    # print(m.motif_pair_code.shape)
+    # print(m.dimer_input_code.shape)
     # print(m.dimer_input_code)
     # print(m.dimer_target_code)
     # print(m.motif_pair_code)
-
 """
+
 
 
 
