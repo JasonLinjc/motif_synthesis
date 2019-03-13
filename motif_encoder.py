@@ -155,7 +155,6 @@ print(dist)
 """
 
 
-"""
 motif_data = pkl.load(open("./dimer_motif_pair.pkl", "rb"))
 
 for motif in motif_data:
@@ -178,13 +177,16 @@ for motif in motif_data:
     z = m.motif_pair2tensor()
     print(z)
     print(z.shape)
+    print(z[0])
     break
     # print(m.motif_pair_code.shape)
     # print(m.dimer_input_code.shape)
+
+
     # print(m.dimer_input_code)
     # print(m.dimer_target_code)
     # print(m.motif_pair_code)
-"""
+
 
 
 
