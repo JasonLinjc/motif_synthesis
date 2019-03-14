@@ -57,12 +57,32 @@ class motif_pair_encoder:
                 m1 = self.motif1_seq[i]
                 m2 = self.motif2_seq[j]
                 com_m2 = self.motif2_seq[j][::-1]
-                z1 = abs(m1 - m2)
+                z1 = m1 - m2
                 z2 = m1 * m2
-                z3 = abs(m1 - com_m2)
+                z3 = m1 - com_m2
                 z4 = m1 * com_m2
                 z = np.concatenate((z1, z2, z3, z4))
                 mp_tensor[i, j] = z
+        return mp_tensor
+
+    def motif_pair2tensor2(self):
+        max_motif_len = 18
+        channel_len = 16
+        mp_tensor = np.zeros((max_motif_len, max_motif_len*2, channel_len))
+        for i in range(len(self.motif1_seq)):
+            m1 = self.motif1_seq[i]
+            for j in range(len(self.motif2_seq)):
+                m2 = self.motif2_seq[j]
+                z1 = m1 - m2
+                z2 = m1 * m2
+                z = np.concatenate((m1, m2, z1, z2))
+                mp_tensor[i, j] = z
+            for k in range(len(self.motif2_seq)):
+                com_m2 = self.motif2_seq[k][::-1]
+                z1 = m1 - com_m2
+                z2 = m1 * com_m2
+                z = np.concatenate((m1, com_m2, z1, z2))
+                mp_tensor[i, k+len(self.motif2_seq)] = z
         return mp_tensor
 
 
@@ -158,7 +178,7 @@ print(dist)
 
 """
 
-"""
+
 motif_data = pkl.load(open("./dimer_motif_pair.pkl", "rb"))
 
 for motif in motif_data:
@@ -178,7 +198,7 @@ for motif in motif_data:
 
     # print(motif1_seq)
     m = motif_pair_encoder(motif1_seq, motif2_seq, dimer_seq)
-    z = m.motif_pair2tensor()
+    z = m.motif_pair2tensor2()
     print(z)
     print(z.shape)
     print(z[0])
@@ -186,8 +206,6 @@ for motif in motif_data:
     # print(m.motif_pair_code.shape)
     # print(m.dimer_input_code.shape)
 
-
-"""
 
 
 

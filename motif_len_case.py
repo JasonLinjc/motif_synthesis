@@ -14,7 +14,7 @@ from keras.losses import categorical_crossentropy
 from keras.models import Sequential
 import matplotlib.pyplot as plt
 from itertools import cycle
-from keras.layers import Dense, Conv2D, Flatten, Input
+from keras.layers import Dense, Conv2D, Flatten, Input, BatchNormalization, Dropout
 from numpy.random import seed
 from sklearn.model_selection import KFold
 seed(6)
@@ -82,17 +82,21 @@ def generate_input_motif_seq(family_name = "bHLH_Homeo"):
 
 def multi_task_CNN(x, y_len, y_case, x_test):
     batch_size = 20
-    epochs = 200
+    epochs = 500
     # create model
     inputs = Input(shape=(18, 18, 16))
     # add model layers
-    conv_1 = Conv2D(128, kernel_size=1, activation='relu')(inputs)
-    conv_2 = Conv2D(64, kernel_size=3, activation='relu')(conv_1)
-    conv_3 = Conv2D(32, kernel_size=3, activation='relu')(conv_2)
+    conv_1 = Conv2D(16, kernel_size=1, activation='sigmoid')(inputs)
+    conv_1 = BatchNormalization()(conv_1)
+    conv_2 = Conv2D(16, kernel_size=5, activation='relu')(conv_1)
+    conv_2 = BatchNormalization()(conv_2)
+    conv_3 = Conv2D(16, kernel_size=3, activation='relu')(conv_2)
+    conv_3 = BatchNormalization()(conv_3)
     # conv_4 = Conv2D(1, kernel_size=1, activation='relu')(conv_1)
     flatten = Flatten()(conv_3)
-    dense_1 = Dense(128, activation='relu')(flatten)
-    dense_1 = Dense(64, activation='relu')(dense_1)
+    dense_1 = Dense(64, activation='relu')(flatten)
+    dense_1 = Dense(32, activation='relu')(dense_1)
+    dense_1 = Dropout(rate=0.3)(dense_1)
 
     len_output = Dense(32, activation='softmax', name="len_out")(dense_1)
     case_output = Dense(4, activation='softmax', name="case_out")(dense_1)
@@ -103,8 +107,8 @@ def multi_task_CNN(x, y_len, y_case, x_test):
                       'len_out': 'categorical_crossentropy',
                       'case_out': 'categorical_crossentropy'},
                   loss_weights={
-                      'len_out': 0.3,
-                      'case_out': 0.7})
+                      'len_out': 0.8,
+                      'case_out': 0.2})
     print(model.summary())
 
     model.fit(x=x, y=[y_len, y_case], batch_size = batch_size, epochs = epochs)
