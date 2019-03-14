@@ -87,7 +87,7 @@ def multi_task_CNN(x, y_len, y_case, x_test):
     inputs = Input(shape=(18, 18, 16))
     # add model layers
     conv_1 = Conv2D(128, kernel_size=1, activation='relu')(inputs)
-    conv_2 = Conv2D(64, kernel_size=5, activation='relu')(conv_1)
+    conv_2 = Conv2D(64, kernel_size=3, activation='relu')(conv_1)
     conv_3 = Conv2D(32, kernel_size=3, activation='relu')(conv_2)
     # conv_4 = Conv2D(1, kernel_size=1, activation='relu')(conv_1)
     flatten = Flatten()(conv_3)

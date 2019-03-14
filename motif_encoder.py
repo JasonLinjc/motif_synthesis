@@ -57,9 +57,9 @@ class motif_pair_encoder:
                 m1 = self.motif1_seq[i]
                 m2 = self.motif2_seq[j]
                 com_m2 = self.motif2_seq[j][::-1]
-                z1 = m1 - m2
+                z1 = abs(m1 - m2)
                 z2 = m1 * m2
-                z3 = m1 - com_m2
+                z3 = abs(m1 - com_m2)
                 z4 = m1 * com_m2
                 z = np.concatenate((z1, z2, z3, z4))
                 mp_tensor[i, j] = z
