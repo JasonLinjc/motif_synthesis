@@ -50,18 +50,22 @@ class motif_pair_encoder:
 
     def motif_pair2tensor(self):
         max_motif_len = 18
-        channel_len = 16
+        channel_len = 28
         mp_tensor = np.zeros((max_motif_len, max_motif_len, channel_len))
         for i in range(len(self.motif1_seq)):
             for j in range(len(self.motif2_seq)):
                 m1 = self.motif1_seq[i]
                 m2 = self.motif2_seq[j]
                 com_m2 = self.motif2_seq[j][::-1]
+                z5 = m1
+                z6 = m2
+                z7 = com_m2
                 z1 = m1 - m2
                 z2 = m1 * m2
                 z3 = m1 - com_m2
                 z4 = m1 * com_m2
-                z = np.concatenate((z1, z2, z3, z4))
+                z = np.concatenate((z5, z6, z7, z1, z2, z3, z4))
+                # z = np.concatenate((z1, z2, z3, z4))
                 mp_tensor[i, j] = z
         return mp_tensor
 
@@ -178,6 +182,7 @@ print(dist)
 
 """
 
+"""
 
 motif_data = pkl.load(open("./dimer_motif_pair.pkl", "rb"))
 
@@ -212,6 +217,10 @@ for motif in motif_data:
     # print(m.dimer_input_code)
     # print(m.dimer_target_code)
     # print(m.motif_pair_code)
+
+"""
+
+
 
 
 

@@ -17,9 +17,9 @@ from itertools import cycle
 from keras.layers import Dense, Conv2D, Flatten, Input, BatchNormalization, Dropout
 from numpy.random import seed
 from sklearn.model_selection import KFold
-seed(6)
+seed(166)
 from tensorflow import set_random_seed
-set_random_seed(66)
+set_random_seed(166)
 
 def generate_input_motif_seq(family_name = "bHLH_Homeo"):
     dimer_tensor = []
@@ -81,22 +81,40 @@ def generate_input_motif_seq(family_name = "bHLH_Homeo"):
 # print(case_labels.shape)
 
 def multi_task_CNN(x, y_len, y_case, x_test):
-    batch_size = 20
+    batch_size = 100
     epochs = 500
     # create model
-    inputs = Input(shape=(18, 18, 16))
+    inputs = Input(shape=(18, 18, 28))
     # add model layers
-    conv_1 = Conv2D(16, kernel_size=1, activation='sigmoid')(inputs)
+    conv_1 = Conv2D(128, kernel_size=1, activation='relu')(inputs)
     conv_1 = BatchNormalization()(conv_1)
-    conv_2 = Conv2D(16, kernel_size=5, activation='relu')(conv_1)
+    conv_1 = Conv2D(128, kernel_size=1, activation='relu')(conv_1)
+    conv_1 = BatchNormalization()(conv_1)
+    conv_2 = Conv2D(64, kernel_size=5, activation='relu')(conv_1)
     conv_2 = BatchNormalization()(conv_2)
-    conv_3 = Conv2D(16, kernel_size=3, activation='relu')(conv_2)
+    conv_2 = Conv2D(64, kernel_size=5, activation='relu')(conv_2)
+    conv_2 = BatchNormalization()(conv_2)
+    conv_3 = Conv2D(32, kernel_size=3, activation='relu')(conv_2)
     conv_3 = BatchNormalization()(conv_3)
-    # conv_4 = Conv2D(1, kernel_size=1, activation='relu')(conv_1)
-    flatten = Flatten()(conv_3)
-    dense_1 = Dense(64, activation='relu')(flatten)
-    dense_1 = Dense(32, activation='relu')(dense_1)
-    dense_1 = Dropout(rate=0.3)(dense_1)
+    conv_3 = Conv2D(32, kernel_size=3, activation='relu')(conv_3)
+    conv_3 = BatchNormalization()(conv_3)
+    conv_3 = Conv2D(32, kernel_size=3, activation='relu')(conv_3)
+    conv_3 = BatchNormalization()(conv_3)
+    conv_4 = Conv2D(16, kernel_size=2, activation='relu')(conv_3)
+    conv_4 = BatchNormalization()(conv_4)
+    conv_4 = Conv2D(16, kernel_size=2, activation='relu')(conv_4)
+    conv_4 = BatchNormalization()(conv_4)
+    conv_4 = Conv2D(16, kernel_size=2, activation='relu')(conv_4)
+    conv_4 = BatchNormalization()(conv_4)
+    conv_5 = Conv2D(8, kernel_size=1, activation='relu')(conv_4)
+    conv_5 = BatchNormalization()(conv_5)
+    conv_5 = Conv2D(8, kernel_size=1, activation='relu')(conv_5)
+    conv_5 = BatchNormalization()(conv_5)
+    flatten = Flatten()(conv_5)
+    dense_1 = Dense(128, activation='relu')(flatten)
+    dense_1 = Dense(64, activation='relu')(dense_1)
+    # dense_1 = Dense(32, activation='relu')(dense_1)
+    dense_1 = Dropout(rate=0.4)(dense_1)
 
     len_output = Dense(32, activation='softmax', name="len_out")(dense_1)
     case_output = Dense(4, activation='softmax', name="case_out")(dense_1)
@@ -107,8 +125,8 @@ def multi_task_CNN(x, y_len, y_case, x_test):
                       'len_out': 'categorical_crossentropy',
                       'case_out': 'categorical_crossentropy'},
                   loss_weights={
-                      'len_out': 0.8,
-                      'case_out': 0.2})
+                      'len_out': 0,
+                      'case_out': 1})
     print(model.summary())
 
     model.fit(x=x, y=[y_len, y_case], batch_size = batch_size, epochs = epochs)
@@ -134,9 +152,16 @@ def decode_predicted_results(pred_len, pred_case):
 def fold10_cross_validation():
     from sklearn.metrics import roc_curve, auc
     from scipy import interp
-    kf = KFold(n_splits=10)
+    kf = KFold(n_splits=10, shuffle=True, random_state=16)
     mp_tensor, len_labels, case_labels = generate_input_motif_seq()
     case_n_classes = 4
+    tprs_4 = dict()
+    aucs_4 = dict()
+    mean_fpr = np.linspace(0, 1, 100)
+    for i in range(case_n_classes):
+        tprs_4[i] = []
+        aucs_4[i] = []
+
     for train_idx, test_idx in kf.split(mp_tensor):
         x_train = mp_tensor[train_idx]
         ylen_train = len_labels[train_idx]
@@ -147,33 +172,43 @@ def fold10_cross_validation():
         ycase_test = case_labels[test_idx]
 
         pred_len, pred_case = multi_task_CNN(x_train, ylen_train, ycase_train, x_test)
-        print(pred_case)
-
+        # print(pred_case)
         fpr = dict()
         tpr = dict()
         roc_auc = dict()
+
         for i in range(case_n_classes):
             pred_case_i = pred_case[:,i]
             true_case_i = ycase_test[:,i]
             fpr[i], tpr[i], _ = roc_curve(true_case_i, pred_case_i)
             roc_auc[i] = auc(fpr[i], tpr[i])
 
-        plt.figure()
-        colors = cycle(['aqua', 'darkorange', 'cornflowerblue','black'])
-        lw = 2
-        for i, color in zip(range(case_n_classes), colors):
-            plt.plot(fpr[i], tpr[i], color=color, lw=lw,
-                    label='ROC curve of case {0} (area = {1:0.2f})'
-                        ''.format(i, roc_auc[i]))
-        plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
-        plt.xlim([0.0, 1.0])
-        plt.ylim([0.0, 1.05])
-        plt.xlabel('False Positive Rate')
-        plt.ylabel('True Positive Rate')
-        plt.title('Receiver operating characteristic example')
-        plt.legend(loc="lower right")
-        plt.show()
-        break
+            tprs_4[i].append(interp(mean_fpr, fpr[i], tpr[i]))
+            tprs_4[i][-1][0] = 0.0
+            aucs_4[i].append(roc_auc[i])
+
+    colors = ['aqua', 'darkorange', 'cornflowerblue', 'black']
+
+    for i in range(case_n_classes):
+        mean_tpr = np.mean(tprs_4[i], axis=0)
+        mean_tpr[-1] = 1.0
+        mean_auc = auc(mean_fpr, mean_tpr)
+        std_auc = np.std(aucs_4[i])
+        plt.plot(mean_fpr, mean_tpr, color=colors[i],
+                 label=r'Mean ROC Case %d (AUC = %0.3f $\pm$ %0.3f)' % (i + 1, mean_auc, std_auc),
+                 lw=2, alpha=.8)
+
+    print(aucs_4)
+    plt.xlim([-0.05, 1.05])
+    plt.ylim([-0.05, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Receiver operating characteristic example')
+    plt.legend(loc="lower right")
+    plt.show()
+
+
+
 
 
 
