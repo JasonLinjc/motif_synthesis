@@ -128,7 +128,7 @@ def mean_motif_column_dist(pred_seq, true_seq):
 
 
 def leave_one_validation():
-    fname = "bHLH_Homeo"
+    fname = "Homeo_Tbox"
     encoder_input, decoder_input, decoder_target, true_dimer, dimer_name = get_motif_from_family(family_name=fname)
 
     # print(encoder_input.shape)
