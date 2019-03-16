@@ -24,6 +24,7 @@ import os
 def generate_input_motif_seq():
     data = []
     motif_data = pkl.load(open("./dimer_motif_pair.pkl", "rb"))
+    dimer_data = pd.read_csv("./JiecongData/row_dimer_data.csv", index_col=[0])
     # print(motif_data)
     for motif in motif_data:
         dimer_dict = motif[0]
@@ -39,9 +40,14 @@ def generate_input_motif_seq():
         dimer_seq = dimer_dict[dimer_name]
         motif1_seq = motif1_dict[motif1_name]
         motif2_seq = motif2_dict[motif2_name]
+
         # print(dimer_seq)
         if motif1_seq == " " or motif2_seq == " ":
             continue
+
+        dimer_info = dimer_data[dimer_data['nameOut'] == dimer_name]
+        if dimer_info['isRC'].item() == 1:
+            dimer_seq = get_rev_com_y(dimer_seq)
 
         m = motif_encoder.motif_pair_encoder(motif1_seq, motif2_seq, dimer_seq)
         motif_pair_seq = m.motif_pair_code
@@ -52,8 +58,20 @@ def generate_input_motif_seq():
         # print(motif_pair_seq.shape)
         # print(dimer_seq)
         data.append([motif_pair_name, motif_pair_seq, dimer_name, dimer_input, dimer_target, dimer_family, dimer_seq])
-
     return data
+
+def get_rev_com_y(seq_mat):
+
+    print(seq_mat)
+    print("-"*50)
+    reversed_mat = seq_mat[::-1].copy()
+
+    for i in range(len(reversed_mat)):
+        reversed_mat[i] = np.concatenate((reversed_mat[i][:4][::-1], reversed_mat[i][4:]))
+
+    # print(seq_mat)
+    # print(reversed_mat)
+    return reversed_mat
 
 def get_motif_from_family(family_name = "bHLH_Homeo"):
     # data = generate_input_motif_seq()
@@ -175,7 +193,7 @@ def seq2seq_mt_model(encoder_input_data, decoder_input_data, decoder_target_data
     # define an input sequence and process it
 
     batch_size = 1
-    epochs = 200
+    epochs = 400
     latent_dim = 256
     input_dim = 128
     target_dim = 126
@@ -270,3 +288,5 @@ def seq2seq_mt_model(encoder_input_data, decoder_input_data, decoder_target_data
 
 # leave_one_validation()
 # print(generate_input_motif_seq()[2])
+# get_motif_from_family()
+leave_one_validation()

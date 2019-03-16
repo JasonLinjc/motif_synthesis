@@ -141,8 +141,8 @@ def ResNet(x_input, y_len, y_case, x_test):
     model = Model(inputs=inputs, outputs=[len_output, case_output], name='resnet')
     model.compile(optimizer='adam',
                   loss={
-                      'len_out': 'categorical_crossentropy',
-                      'case_out': 'categorical_crossentropy'},
+                      'len_out': 'mean_squared_logarithmic_error',
+                      'case_out': 'mean_squared_logarithmic_error'},
                   loss_weights={
                       'len_out': 0.4,
                       'case_out': 0.6})

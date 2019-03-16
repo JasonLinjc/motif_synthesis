@@ -118,8 +118,8 @@ def multi_task_CNN(x, y_len, y_case, x_test):
     model = Model(inputs=inputs, outputs=[len_output, case_output])
     model.compile(optimizer='adam',
                   loss={
-                      'len_out': 'categorical_crossentropy',
-                      'case_out': 'categorical_crossentropy'},
+                      'len_out': 'mean_squared_logarithmic_error',
+                      'case_out': 'mean_squared_logarithmic_error'},
                   loss_weights={
                       'len_out': 0.5,
                       'case_out': 0.5})
@@ -220,4 +220,4 @@ def multi_loss(len_true, len_pred, case_true, case_pred):
 # pred_len, pred_case = multi_task_CNN(mp_tensor[:50], len_labels[:50], case_labels[:50], mp_tensor[-10:])
 
 
-# fold10_cross_validation()
+fold10_cross_validation()
