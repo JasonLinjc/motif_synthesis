@@ -88,8 +88,6 @@ def multi_task_CNN(x, y_len, y_case, x_test):
     # add model layers
     conv_1 = Conv2D(128, kernel_size=1, activation='relu')(inputs)
     conv_1 = BatchNormalization()(conv_1)
-    conv_1 = Conv2D(128, kernel_size=1, activation='relu')(conv_1)
-    conv_1 = BatchNormalization()(conv_1)
     conv_2 = Conv2D(64, kernel_size=5, activation='relu')(conv_1)
     conv_2 = BatchNormalization()(conv_2)
     conv_2 = Conv2D(64, kernel_size=5, activation='relu')(conv_2)
@@ -104,8 +102,6 @@ def multi_task_CNN(x, y_len, y_case, x_test):
     conv_4 = BatchNormalization()(conv_4)
     conv_4 = Conv2D(16, kernel_size=2, activation='relu')(conv_4)
     conv_4 = BatchNormalization()(conv_4)
-    conv_4 = Conv2D(16, kernel_size=2, activation='relu')(conv_4)
-    conv_4 = BatchNormalization()(conv_4)
     conv_5 = Conv2D(8, kernel_size=1, activation='relu')(conv_4)
     conv_5 = BatchNormalization()(conv_5)
     conv_5 = Conv2D(8, kernel_size=1, activation='relu')(conv_5)
@@ -114,7 +110,7 @@ def multi_task_CNN(x, y_len, y_case, x_test):
     dense_1 = Dense(128, activation='relu')(flatten)
     dense_1 = Dense(64, activation='relu')(dense_1)
     # dense_1 = Dense(32, activation='relu')(dense_1)
-    dense_1 = Dropout(rate=0.4)(dense_1)
+    dense_1 = Dropout(rate=0.3)(dense_1)
 
     len_output = Dense(32, activation='softmax', name="len_out")(dense_1)
     case_output = Dense(4, activation='softmax', name="case_out")(dense_1)
@@ -125,8 +121,8 @@ def multi_task_CNN(x, y_len, y_case, x_test):
                       'len_out': 'categorical_crossentropy',
                       'case_out': 'categorical_crossentropy'},
                   loss_weights={
-                      'len_out': 0,
-                      'case_out': 1})
+                      'len_out': 0.5,
+                      'case_out': 0.5})
     print(model.summary())
 
     model.fit(x=x, y=[y_len, y_case], batch_size = batch_size, epochs = epochs)
@@ -224,4 +220,4 @@ def multi_loss(len_true, len_pred, case_true, case_pred):
 # pred_len, pred_case = multi_task_CNN(mp_tensor[:50], len_labels[:50], case_labels[:50], mp_tensor[-10:])
 
 
-fold10_cross_validation()
+# fold10_cross_validation()
