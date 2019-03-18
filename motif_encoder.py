@@ -90,6 +90,8 @@ class motif_pair_encoder:
         return mp_tensor
 
 
+
+
 class pred_dimer_decoder:
     dimer_code_len = 126
     def __init__(self, pred_dimer_code):
