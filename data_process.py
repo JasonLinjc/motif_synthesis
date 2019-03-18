@@ -140,15 +140,23 @@ def find_motif_idx(dimer_motif, motif_database):
 
 
 def find_best_matching_idx():
-    dimer_data = pd.read_csv("./JiecongData/row_dimer_data.csv", index_col=[0])
-    motif_data = pkl.load(open("./dimer_motif_pair.pkl", "rb"))
+    kc_dimer_info = pd.read_csv("./JiecongData/kc_dimer_info.csv")
+    homomotif_seq_dict = pkl.load(open("./JiecongData/homodimerMotifDatabase_dict.pkl", "rb"))
+    motif_seq_dict = pkl.load(open("JiecongData/motifDatabase_dict.pkl", "rb"))
+    dimer_seq_dict = pkl.load(open("JiecongData/dimerMotifDatabase_dict.pkl", "rb"))
+    dimerfamily_dict = pkl.load(open("JiecongData/dimerMotifFamily_dict.pkl",  "rb"))
 
 
+
+find_best_matching_idx()
+
+# dimer_data = pd.read_csv("./JiecongData/row_dimer_data.csv", index_col=[0])
+# dimer_data.to_csv("kc_dimer_info.csv", index=False)
 # find_best_matching_idx()
 
-load_motif()
-motif_dict = load_motif(filename="./JiecongData/motifDatabase.txt")
-homo_motif_dict = load_motif(filename="./JiecongData/homodimerMotifDatabase.txt")
+# load_motif()
+# motif_dict = load_motif(filename="./JiecongData/motifDatabase.txt")
+# homo_motif_dict = load_motif(filename="./JiecongData/homodimerMotifDatabase.txt")
 
 # pair_motif_and_dimer()
 
