@@ -4,6 +4,7 @@ data(ggseqlogo_sample)
 load("~/Documents/year2semB/motif_synthesis/JiecongData/motifDatabase.RData")
 load("~/Documents/year2semB/motif_synthesis/JiecongData/HomodimerMotifDatabase.RData")
 load("~/Documents/year2semB/motif_synthesis/JiecongData/DimerMotifDatabase.RData")
+load("~/Documents/year2semB/motif_synthesis/JiecongData/ProcessedData/misc.RData")
 # ggseqlogo(pfms_dna$MA0031.1, method = 'prob')
 # pfm2 = HomodimerMotifDatabase$Alx1
 # rownames(pfm2) = c('A','C','G','T')
@@ -11,22 +12,14 @@ load("~/Documents/year2semB/motif_synthesis/JiecongData/DimerMotifDatabase.RData
 # length(DimerMotifFamily)
 # n = keys(DimerMotifFamily)[1]
 # DimerMotifFamily[[n]]
-
-visualise_motifs <- function(fname, dname)
+get_rev_com <- function(motif_seq)
 {
-  dimer = list()
-  j = 1
-  for (i in 1:length(DimerMotifFamily))
-  {
-    motif_name = keys(DimerMotifFamily)[i]
-    family_name = DimerMotifFamily[[motif_name]]
-    if (family_name == fname)
-    {
-      dimer[[j]] <- motif_name
-      j = j + 1
-    }
-  }
-  vdimer = dimer[[5]]
+  return(matrix(rev(motif_seq),nrow=4))
+}
+
+visualise_motifs <- function(dname, isRC, case_type, olen)
+{
+  vdimer = dname
   print(vdimer)
   split_motif = strsplit(vdimer, "_")[[1]]
   motif1 = split_motif[1]
@@ -42,6 +35,28 @@ visualise_motifs <- function(fname, dname)
     pfm_motif2 = HomodimerMotifDatabase[[motif2]]
   }
   pfm_dimer = DimerMotifDatabase[[vdimer]]
+  
+  if (isRC == 1)
+  {
+    pfm_dimer = get_rev_com(pfm_dimer)
+  }
+  # Case 1 : X-Y
+  if (case_type == 2) {
+    # Case 2 : Y-X
+    t = pfm_motif2
+    pfm_motif2 = pfm_motif1
+    pfm_motif1 = t
+  }else if (case_type == 3) {
+    # Case 3 : y-X
+    pfm_motif2 = get_rev_com(pfm_motif2)
+    t = pfm_motif2
+    pfm_motif2 = pfm_motif1
+    pfm_motif1 = t
+  }else {
+    # Case 4 : X-y
+    pfm_motif2 = get_rev_com(pfm_motif2)
+  }
+  
   rownames(pfm_motif1) = c('A','C','G','T')
   rownames(pfm_motif2) = c('A','C','G','T')
   rownames(pfm_dimer) = c('A','C','G','T')
@@ -103,9 +118,14 @@ visualise_pred_dimer <- function(dimer_dir)
     dev.off()
   }
 }
-fname = "Homeo_Tbox"
-visualise_pred_dimer(paste("~/year2semB/motif_synthesis/pred_dimer/", fname,"/" ,sep=""))
 
+find_best_overlap_idx <- function(motif1_seq,motif2_seq, dimer_seq)
+{
+  
+}
+
+# fname = "Homeo_Tbox"
+# visualise_pred_dimer(paste("~/year2semB/motif_synthesis/pred_dimer/", fname,"/" ,sep=""))
 
 # pfm = DimerMotifDatabase[[vdimer]]s
 # print(vdimer)
@@ -116,6 +136,16 @@ visualise_pred_dimer(paste("~/year2semB/motif_synthesis/pred_dimer/", fname,"/" 
 # data.matrix(a)
 # rownames(a) = c('A','C','G','T')
 
-
+for (i in 1:nrow(NewAlignmentExperimentDF))
+{
+  info = NewAlignmentExperimentDF[7,]
+  dimer_name = info[['nameOut']]
+  case_type = info[['case']]
+  isRC_ = info[['isRC']]
+  olen = info[['overlapLen']]
+  print(info)
+  visualise_motifs(dimer_name, isRC_, case_type, olen)
+  break
+}
 
 

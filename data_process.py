@@ -5,9 +5,14 @@
 # @Software :PyCharm
 import re
 import numpy as np
+import pandas as pd
+import pickle as pkl
+import re
 
 def load_motif(filename="./JiecongData/dimerMotifDatabase.txt"):
     dict = {}
+    fname = re.split("/|\.", filename)[-2]
+    #  print(fname)
     with open(filename, "r") as f:
         for line in f:
             hd_motif = re.split(" : | ", line.strip())
@@ -18,6 +23,8 @@ def load_motif(filename="./JiecongData/dimerMotifDatabase.txt"):
             # print(np.reshape(hd_seq, (4, -1)))
             dict[hd_name] = np.reshape(hd_seq, (-1, 4))
             # print(dict[hd_name].shape)
+    dict_fname = "./JiecongData/" + fname + "_dict.pkl"
+    pkl.dump(dict, open(dict_fname, "wb"))
     return dict
 
 def load_dimer_family():
@@ -32,8 +39,10 @@ def load_dimer_family():
     # print(dict)
     # print(len(dict))
     # print(len(set(list(dict.values()))))
+    pkl.dump(dict, open("./JiecongData/dimerMotifFamily_dict.pkl", "wb"))
     return dict
 # load_motif(filename="./JiecongData/homodimerMotifDatabase.txt")
+
 
 def pair_motif_and_dimer():
     dimer_motif_dict = load_motif(filename="./JiecongData/dimerMotifDatabase.txt")
@@ -49,6 +58,8 @@ def pair_motif_and_dimer():
     motifp_dimer_list = []
     dmotifs = list(dimer_motif_dict.keys())
     no_found_motif = []
+
+
     for dimer in dmotifs:
         motif_l = dimer.split("_")
         # print(motif_l)
@@ -126,11 +137,24 @@ def find_motif_idx(dimer_motif, motif_database):
         idx = -1
     return idx
 
+
+
+def find_best_matching_idx():
+    dimer_data = pd.read_csv("./JiecongData/row_dimer_data.csv", index_col=[0])
+    motif_data = pkl.load(open("./dimer_motif_pair.pkl", "rb"))
+
+
+# find_best_matching_idx()
+
+load_motif()
+motif_dict = load_motif(filename="./JiecongData/motifDatabase.txt")
+homo_motif_dict = load_motif(filename="./JiecongData/homodimerMotifDatabase.txt")
+
 # pair_motif_and_dimer()
 
-dict = load_dimer_family()
-print(len(dict))
-fam = list(dict.values())
+# dict = load_dimer_family()
+#  print(len(dict))
+#  fam = list(dict.values())
 # print(fam)
 """
 f_count = {}
@@ -153,5 +177,5 @@ for d in dimers:
 
 print(dimer_dict)
 """
-name = "bHLH_Homeo"
+# name = "bHLH_Homeo"
 
