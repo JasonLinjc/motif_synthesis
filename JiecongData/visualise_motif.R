@@ -56,7 +56,6 @@ visualise_motifs <- function(dname, isRC, case_type, olen)
     # Case 4 : X-y
     pfm_motif2 = get_rev_com(pfm_motif2)
   }
-  
   rownames(pfm_motif1) = c('A','C','G','T')
   rownames(pfm_motif2) = c('A','C','G','T')
   rownames(pfm_dimer) = c('A','C','G','T')
@@ -119,11 +118,6 @@ visualise_pred_dimer <- function(dimer_dir)
   }
 }
 
-find_best_overlap_idx <- function(motif1_seq,motif2_seq, dimer_seq)
-{
-  
-}
-
 # fname = "Homeo_Tbox"
 # visualise_pred_dimer(paste("~/year2semB/motif_synthesis/pred_dimer/", fname,"/" ,sep=""))
 
@@ -138,7 +132,7 @@ find_best_overlap_idx <- function(motif1_seq,motif2_seq, dimer_seq)
 
 for (i in 1:nrow(NewAlignmentExperimentDF))
 {
-  info = NewAlignmentExperimentDF[7,]
+  info = NewAlignmentExperimentDF[1,]
   dimer_name = info[['nameOut']]
   case_type = info[['case']]
   isRC_ = info[['isRC']]
