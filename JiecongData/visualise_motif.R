@@ -132,7 +132,7 @@ visualise_pred_dimer <- function(dimer_dir)
 
 for (i in 1:nrow(NewAlignmentExperimentDF))
 {
-  info = NewAlignmentExperimentDF[1,]
+  info = NewAlignmentExperimentDF[4,]
   dimer_name = info[['nameOut']]
   case_type = info[['case']]
   isRC_ = info[['isRC']]
