@@ -11,12 +11,14 @@ import pickle as pkl
 class motif_encoder:
     dimer_motif_data = pd.read_csv("./JiecongData/row_dimer_data.csv", index_col=[0])
     single_motif_maxlen = 18
+    dimer_maxlen = 31 + 2
 
     def __init__(self, motif1_seq, motif2_seq, dimer_seq):
         self.motif1_seq = motif1_seq
         self.motif2_seq = motif2_seq
         self.dimer_seq = dimer_seq
         self.encode_source_motif_pair()
+        self.encode_target_dimer()
 
 
     def encode_source_motif_pair(self):
@@ -32,8 +34,18 @@ class motif_encoder:
         self.motif_pair_code = motif_pair_code
 
     def encode_target_dimer(self):
+        # Add two symbols : <GO> and <EOS>
+        dimer_code = np.zeros((self.dimer_maxlen, 6))
+        dimer_code[0] = np.array([1, 0, 0, 0, 0, 0])
+        i = 1
+        for n_code in self.dimer_seq:
+            c = np.zeros((6))
+            c[1:-1] = n_code
+            dimer_code[i] = c
+            i += 1
+        dimer_code[i] = np.array([0, 0, 0, 0, 0, 1])
+        self.dimer_code = dimer_code
 
-        pass
 
 
 def get_seq():
@@ -50,7 +62,7 @@ def get_seq():
     for idx, d_info in kc_dimer_info.iterrows():
         # if idx != 3:
         #     continue
-        print(d_info)
+        # print(d_info)
         olen = d_info['overlapLen']
         isRC = d_info['isRC']
         loc1 = d_info['loc1']
@@ -69,12 +81,23 @@ def get_seq():
         except:
             motif2_seq = homomotif_seq_dict[motif2_name]
 
-        # m = motif_encoder(motif1_seq, motif2_seq, dimer_seq)
-        # print(m.motif_pair_code)
-        # print(m.motif_pair_code.shape)
-        
+        if len(motif1_seq) > motif1_len:
+            motif1_len = len(motif1_seq)
+        if len(motif2_seq) > motif2_len:
+            motif2_len = len(motif2_seq)
+        if len(dimer_seq) > dimer_len:
+            dimer_len = len(dimer_seq)
+
+        m = motif_encoder(motif1_seq, motif2_seq, dimer_seq)
+        print(m.motif_pair_code)
+        print(m.motif_pair_code.shape)
+        print(m.dimer_code)
+        print(m.dimer_code.shape)
 
         break
+    # print(motif1_len, motif2_len, dimer_len)
+
+
 
 
 get_seq()
