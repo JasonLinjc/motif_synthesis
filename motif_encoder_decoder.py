@@ -20,7 +20,6 @@ class motif_encoder:
         self.encode_source_motif_pair()
         self.encode_target_dimer()
 
-
     def encode_source_motif_pair(self):
         motif_pair_code = np.zeros((self.single_motif_maxlen*2, 4)) + 0.25
         # motif_pair = np.concatenate((self.motif1_seq, self.motif2_seq), axis=0)
@@ -46,6 +45,39 @@ class motif_encoder:
         dimer_code[i] = np.array([0, 0, 0, 0, 0, 1])
         self.dimer_code = dimer_code
 
+    @classmethod
+    def get_sequence_family_input(self, family_name = "bHLH_Homeo"):
+        kc_dimer_info = pd.read_csv("./JiecongData/kc_dimer_info.csv")
+        homomotif_seq_dict = pkl.load(open("./JiecongData/homodimerMotifDatabase_dict.pkl", "rb"))
+        motif_seq_dict = pkl.load(open("JiecongData/motifDatabase_dict.pkl", "rb"))
+        dimer_seq_dict = pkl.load(open("JiecongData/dimerMotifDatabase_dict.pkl", "rb"))
+        dimerfamily_dict = pkl.load(open("JiecongData/dimerMotifFamily_dict.pkl", "rb"))
+        dimer_list = []
+        dimer_seqs = []
+        motif1_seqs = []
+        motif2_seqs = []
+        for name in dimerfamily_dict.keys():
+            if dimerfamily_dict[name] == family_name:
+                try:
+                    dimer_seq = dimer_seq_dict[name]
+                except:
+                    continue
+                motif1_name, motif2_name = name.split("_")[:2]
+                try:
+                    motif1_seq = motif_seq_dict[motif1_name]
+                except:
+                    motif1_seq = homomotif_seq_dict[motif1_name]
+                try:
+                    motif2_seq = motif_seq_dict[motif2_name]
+                except:
+                    motif2_seq = homomotif_seq_dict[motif2_name]
+
+                dimer_seqs.append(dimer_seq)
+                motif1_seqs.append(motif1_seq)
+                motif2_seqs.append(motif2_seq)
+                dimer_list.append(name)
+        # print([dimer_list, dimer_seqs, motif1_seqs, motif2_seqs])
+        return [dimer_list, dimer_seqs, motif1_seqs, motif2_seqs]
 
 
 def get_seq():
@@ -94,10 +126,11 @@ def get_seq():
         print(m.dimer_code)
         print(m.dimer_code.shape)
 
-        break
-    # print(motif1_len, motif2_len, dimer_len)
+        # break
+    print(motif1_len, motif2_len, dimer_len)
 
 
 
 
-get_seq()
+# get_seq()
+# motif_encoder.get_sequence_family_input()

@@ -21,7 +21,6 @@ import tqdm
 import matplotlib.pyplot as plt
 
 
-
 def softmax(x, axis=1):
     """
     Softmax activation function.
@@ -36,7 +35,11 @@ def softmax(x, axis=1):
     else:
         raise ValueError('Cannot apply softmax to a tensor that is 1D')
 
-Tx = 18
+Tx = 18 + 18 # Source sequence max length
+Ty = 31 + 2  # Target sequence max length
+source_dim = 4
+target_dim = 6
+
 repeator = RepeatVector(Tx)
 concatenator = Concatenate(axis=-1)
 densor_tanh = Dense(32, activation = "tanh")
@@ -68,15 +71,14 @@ def one_step_attention(a, s_prev):
 
     return context
 
-target_seq_dim = 6
 
 n_a = 32 # The hidden size of Bi-LSTM
 n_s = 128 # The hidden size of LSTM in Decoder
 decoder_LSTM_cell = LSTM(n_s, return_state=True)
-output_layer = Dense(target_seq_dim, activation=softmax)
+output_layer = Dense(target_dim, activation=softmax)
 
 # 定义网络层对象（用在model函数中）
-reshapor = Reshape((1, target_seq_dim))
+reshapor = Reshape((1, target_dim))
 concator = Concatenate(axis=-1)
 
 
@@ -87,8 +89,6 @@ def model(Tx, Ty, n_a, n_s, source_seq_dim, target_seq_dim):
     @param Ty: 输出序列的长度
     @param n_a: Encoder端Bi-LSTM隐层结点数
     @param n_s: Decoder端LSTM隐层结点数
-    @param source_vocab_size: 输入（英文）语料的词典大小
-    @param target_vocab_size: 输出（法语）语料的词典大小
     """
     # 定义输入层
     X = Input(shape=(Tx,))
@@ -130,5 +130,9 @@ def model(Tx, Ty, n_a, n_s, source_seq_dim, target_seq_dim):
 
     return model
 
-
+model = model(Tx, Ty, n_a, n_s, source_dim, target_dim)
+model.summary()
+out = model.compile(optimizer=Adam(lr=0.01, beta_1=0.9, beta_2=0.999, decay=0.001),
+                    metrics=['accuracy'],
+                    loss='categorical_crossentropy')
 
