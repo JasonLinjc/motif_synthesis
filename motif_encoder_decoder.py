@@ -56,8 +56,13 @@ class motif_encoder:
         dimer_seqs = []
         motif1_seqs = []
         motif2_seqs = []
+        motif_pair_seqs = []
+        isRCs = []
         for name in dimerfamily_dict.keys():
             if dimerfamily_dict[name] == family_name:
+
+                isRC = kc_dimer_info[kc_dimer_info['nameOut'] == name]['isRC'].item()
+
                 try:
                     dimer_seq = dimer_seq_dict[name]
                 except:
@@ -72,13 +77,98 @@ class motif_encoder:
                 except:
                     motif2_seq = homomotif_seq_dict[motif2_name]
 
+                if isRC == 1:
+                    # dimer_seq = get_rev_com_y(dimer_seq)
+                    continue
+
+                motif_pair = np.concatenate((motif1_seq, motif2_seq))
+                motif_pair_seqs.append(motif_pair)
                 dimer_seqs.append(dimer_seq)
                 motif1_seqs.append(motif1_seq)
                 motif2_seqs.append(motif2_seq)
                 dimer_list.append(name)
-        # print([dimer_list, dimer_seqs, motif1_seqs, motif2_seqs])
-        return [dimer_list, dimer_seqs, motif1_seqs, motif2_seqs]
+                isRCs.append(isRC)
+        # print([dimer_list, dimer_seqs, motif1_seqs, motif2_seqs, motif_pair_seqs, isRCs])
+        return [dimer_list, dimer_seqs, motif1_seqs, motif2_seqs, isRCs]
 
+    @classmethod
+    def get_all_dimer(self):
+        dimer_list = []
+        dimer_seqs = []
+        motif1_seqs = []
+        motif2_seqs = []
+        isRCs = []
+        kc_dimer_info = pd.read_csv("./JiecongData/kc_dimer_info.csv")
+        homomotif_seq_dict = pkl.load(open("./JiecongData/homodimerMotifDatabase_dict.pkl", "rb"))
+        motif_seq_dict = pkl.load(open("JiecongData/motifDatabase_dict.pkl", "rb"))
+        dimer_seq_dict = pkl.load(open("JiecongData/dimerMotifDatabase_dict.pkl", "rb"))
+        dimerfamily_dict = pkl.load(open("JiecongData/dimerMotifFamily_dict.pkl", "rb"))
+        for idx, d_info in kc_dimer_info.iterrows():
+            olen = d_info['overlapLen']
+            isRC = d_info['isRC']
+            loc1 = d_info['loc1']
+            loc2 = d_info['loc2']
+            case = d_info['case']
+            motif1_name = d_info['name1']
+            motif2_name = d_info['name2']
+            dimer_name = d_info['nameOut']
+            dimer_seq = dimer_seq_dict[dimer_name]
+            try:
+                motif1_seq = motif_seq_dict[motif1_name]
+            except:
+                motif1_seq = homomotif_seq_dict[motif1_name]
+            try:
+                motif2_seq = motif_seq_dict[motif2_name]
+            except:
+                motif2_seq = homomotif_seq_dict[motif2_name]
+            if isRC == 1:
+                continue
+            dimer_seqs.append(dimer_seq)
+            motif1_seqs.append(motif1_seq)
+            motif2_seqs.append(motif2_seq)
+            dimer_list.append(dimer_name)
+            isRCs.append(isRC)
+        return [dimer_list, dimer_seqs, motif1_seqs, motif2_seqs, isRCs]
+
+    @classmethod
+    def mean_motif_column_dist(self, true_dimer, pred_dimer):
+        # print(true_dimer_code)
+        true_len = len(true_dimer)
+        pred_len = len(pred_dimer)
+        print("true_len:", true_len, "pred_len:", pred_len)
+        # len_ = min([true_len, pred_len])
+        dist_list = []
+        # print(self.true_dimer_code)
+        if true_len <= pred_len:
+            len_ = true_len
+            gap_len  =  pred_len  - true_len
+            for i in range(gap_len + 1):
+                tem_dist = 0
+                for j in range(len_):
+                    tem_dist += np.sqrt(sum((true_dimer[j] - pred_dimer[j+i]) ** 2))
+                dist_list.append(tem_dist)
+        else:
+            len_ = pred_len
+            gap_len = true_len - pred_len
+            for i in range(gap_len + 1):
+                tem_dist = 0
+                for j in range(len_):
+                    tem_dist += np.sqrt(sum((true_dimer[j+i] - pred_dimer[j]) ** 2))
+                dist_list.append(tem_dist)
+        dist_list = np.array(dist_list)
+        res = dist_list/len_
+        print(res)
+        return min(res)
+
+def get_rev_com_y(seq_mat):
+
+    # print(seq_mat)
+    # print("-"*50)
+    reversed_mat = seq_mat[::-1].copy()
+
+    for i in range(len(reversed_mat)):
+        reversed_mat[i] = np.concatenate((reversed_mat[i][:4][::-1], reversed_mat[i][4:]))
+    return reversed_mat
 
 def get_seq():
 
@@ -128,9 +218,6 @@ def get_seq():
 
         # break
     print(motif1_len, motif2_len, dimer_len)
-
-
-
 
 # get_seq()
 # motif_encoder.get_sequence_family_input()

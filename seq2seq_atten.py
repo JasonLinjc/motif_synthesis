@@ -5,8 +5,7 @@
 # @Software :PyCharm
 
 import warnings
-warnings.filterwarnings("ignore")
-
+# warnings.filterwarnings("ignore")
 from keras.layers import Bidirectional, Concatenate, Permute, Dot, Input, LSTM, Multiply, Reshape
 from keras.layers import RepeatVector, Dense, Activation, Lambda, Embedding
 from keras.optimizers import Adam
@@ -19,7 +18,9 @@ import pickle as pkl
 import random
 import tqdm
 import matplotlib.pyplot as plt
-
+import motif_encoder_decoder
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 def softmax(x, axis=1):
     """
@@ -71,7 +72,6 @@ def one_step_attention(a, s_prev):
 
     return context
 
-
 n_a = 32 # The hidden size of Bi-LSTM
 n_s = 128 # The hidden size of LSTM in Decoder
 decoder_LSTM_cell = LSTM(n_s, return_state=True)
@@ -82,7 +82,7 @@ reshapor = Reshape((1, target_dim))
 concator = Concatenate(axis=-1)
 
 
-def model(Tx, Ty, n_a, n_s, source_seq_dim, target_seq_dim):
+def seq_model(Tx, Ty, n_a, n_s, source_seq_dim, target_seq_dim):
     """
     构造模型
     @param Tx: 输入序列的长度
@@ -91,7 +91,7 @@ def model(Tx, Ty, n_a, n_s, source_seq_dim, target_seq_dim):
     @param n_s: Decoder端LSTM隐层结点数
     """
     # 定义输入层
-    X = Input(shape=(Tx,))
+    X = Input(shape=(Tx, source_seq_dim))
     # Embedding层
     # embed = embedding_layer(X)
     # Decoder端LSTM的初始状态
@@ -99,7 +99,7 @@ def model(Tx, Ty, n_a, n_s, source_seq_dim, target_seq_dim):
     c0 = Input(shape=(n_s,), name='c0')
 
     # Decoder端LSTM的初始输入
-    out0 = Input(shape=(target_seq_dim,), name='out0')
+    out0 = Input(shape=(target_seq_dim, ), name='out0')
     out = reshapor(out0)
 
     s = s0
@@ -126,13 +126,91 @@ def model(Tx, Ty, n_a, n_s, source_seq_dim, target_seq_dim):
         # 存储输出结果
         outputs.append(out)
 
+    # outputs = np.array(outputs)
+
     model = Model([X, s0, c0, out0], outputs)
 
     return model
 
-model = model(Tx, Ty, n_a, n_s, source_dim, target_dim)
-model.summary()
+model = seq_model(Tx, Ty, n_a, n_s, source_dim, target_dim)
+# model.summary()
 out = model.compile(optimizer=Adam(lr=0.01, beta_1=0.9, beta_2=0.999, decay=0.001),
                     metrics=['accuracy'],
                     loss='categorical_crossentropy')
 
+def load_sequence_data():
+    family_name = "bHLH_Homeo"
+    # seq_info = motif_encoder_decoder.motif_encoder.get_sequence_family_input(family_name)
+    seq_info = motif_encoder_decoder.motif_encoder.get_all_dimer()
+    # print(seq_info)
+    motif1_seqs = seq_info[2]
+    motif2_seqs = seq_info[3]
+    dimer_seqs = seq_info[1]
+    isRC_flags = seq_info[-1]
+
+    s_seqs = []
+    t_seqs = []
+    for i in range(len(dimer_seqs)):
+        m = motif_encoder_decoder.motif_encoder(motif1_seq=motif1_seqs[i],
+                                                motif2_seq=motif2_seqs[i], dimer_seq=dimer_seqs[i])
+        source_sequence = m.motif_pair_code
+        target_sequence = m.dimer_code
+
+        # print(source_sequence.shape)
+        # print(target_sequence.shape)
+        s_seqs.append(source_sequence)
+        t_seqs.append(target_sequence)
+
+    s_seqs = np.array(s_seqs)
+    t_seqs = np.array(t_seqs)
+    # print(s_seqs.shape)
+    # print(t_seqs.shape)
+    return s_seqs, t_seqs
+
+def leave_one_validation():
+    from sklearn.model_selection import LeaveOneOut
+    source_seqs, target_seqs = load_sequence_data()
+    loo = LeaveOneOut()
+    loo.get_n_splits(source_seqs)
+    # print(target_seqs.shape)
+    all_dist = []
+    for train_index, test_index in loo.split(source_seqs):
+        s_train = source_seqs[train_index]
+        t_train = target_seqs[train_index]
+        s_test = source_seqs[test_index]
+        t_test = target_seqs[test_index]
+
+        m = s_train.shape[0]
+        s0 = np.zeros((m, n_s))
+        c0 = np.zeros((m, n_s))
+        out0 = np.zeros((m, target_dim))
+        outputs = list(t_train.swapaxes(0, 1))
+        model.fit([s_train, s0, c0, out0], outputs, epochs=200, batch_size=100)
+
+        preds = model.predict([s_test, s0, c0, out0])
+        pred_dimer = np.array(preds).reshape((33, 6))
+
+        end_idx = 0
+        for l in np.argmax(preds, axis=-1):
+            if l == 5:
+                 break
+            else:
+                end_idx += 1
+        pred_dimer = pred_dimer[1:end_idx, 1:-1]
+
+        print("-"*20, "pred_dimer", "-"*20)
+        print(pred_dimer)
+        t_test = t_test[0]
+        end_idx = np.arange(len(t_test))[t_test[:,-1] == 1][0]
+        print(end_idx)
+        true_dimer = t_test[1:end_idx, 1:-1]
+        print("-" * 20, "true_dimer", "-" * 20)
+        print(true_dimer)
+        print(true_dimer.shape)
+        avg_dist = motif_encoder_decoder.motif_encoder.mean_motif_column_dist(true_dimer=true_dimer, pred_dimer=pred_dimer)
+        print(avg_dist)
+        all_dist.append(avg_dist)
+    print(all_dist)
+    print(np.mean(np.array(all_dist)))
+
+leave_one_validation()
