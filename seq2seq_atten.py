@@ -172,6 +172,7 @@ def leave_one_validation():
     source_seqs, target_seqs = load_sequence_data()
     loo = LeaveOneOut()
     loo.get_n_splits(source_seqs)
+    i = 1
     # print(target_seqs.shape)
     all_dist = []
     for train_index, test_index in loo.split(source_seqs):
@@ -186,6 +187,7 @@ def leave_one_validation():
         out0 = np.zeros((m, target_dim))
         outputs = list(t_train.swapaxes(0, 1))
         model.fit([s_train, s0, c0, out0], outputs, epochs=200, batch_size=100)
+
 
         preds = model.predict([s_test, s0, c0, out0])
         pred_dimer = np.array(preds).reshape((33, 6))
@@ -210,7 +212,55 @@ def leave_one_validation():
         avg_dist = motif_encoder_decoder.motif_encoder.mean_motif_column_dist(true_dimer=true_dimer, pred_dimer=pred_dimer)
         print(avg_dist)
         all_dist.append(avg_dist)
+        with open("./res_full.txt", "a") as f:
+            f.write("-"*20 + str(i) + "-"*20 + "\n"+ str(avg_dist) +
+                    " true_len:" + str(len(true_dimer)) + " pred_len:" + str(len(pred_dimer)) +  "\n")
+        i += 1
     print(all_dist)
     print(np.mean(np.array(all_dist)))
 
-leave_one_validation()
+
+def fold10_cv():
+    from sklearn.model_selection import KFold
+    source_seqs, target_seqs = load_sequence_data()
+    kf = KFold(n_splits=10, random_state=66, shuffle=True)
+    fold_dict = dict()
+    fold_id = 0
+    for train_index, test_index in kf.split(source_seqs):
+        res_dist = []
+        s_train = source_seqs[train_index]
+        t_train = target_seqs[train_index]
+        s_test = source_seqs[test_index]
+        t_test = target_seqs[test_index]
+        m = s_train.shape[0]
+        s0 = np.zeros((m, n_s))
+        c0 = np.zeros((m, n_s))
+        out0 = np.zeros((m, target_dim))
+        outputs = list(t_train.swapaxes(0, 1))
+        model.fit([s_train, s0, c0, out0], outputs, epochs=300, batch_size=50)
+        preds = model.predict([s_test, s0, c0, out0])
+        pred_dimer = np.array(preds).swapaxes(0, 1)
+        print(pred_dimer.shape)
+        for i in range(len(pred_dimer)):
+            pdimer = pred_dimer[i]
+            tdimer = t_test[i]
+            end_idx = 0
+            for l in np.argmax(pdimer, axis=-1):
+                if l == 5:
+                    break
+                else:
+                    end_idx += 1
+            pdimer = pdimer[1:end_idx, 1:-1]
+            end_idx = np.arange(len(tdimer))[tdimer[:, -1] == 1][0]
+            tdimer = tdimer[1:end_idx, 1:-1]
+            avg_dist = motif_encoder_decoder.motif_encoder.mean_motif_column_dist(true_dimer=tdimer,                                                                                pred_dimer=pdimer)
+            # print(avg_dist)
+            res_dist.append(avg_dist)
+        print(res_dist)
+        fold_dict[fold_id] = res_dist
+        fold_id += 1
+
+    import pickle
+    pickle.dump(fold_dict, open("10_fold_cv.pkl", "wb"))
+# leave_one_validation()
+fold10_cv()

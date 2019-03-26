@@ -121,8 +121,8 @@ class motif_encoder:
                 motif2_seq = motif_seq_dict[motif2_name]
             except:
                 motif2_seq = homomotif_seq_dict[motif2_name]
-            if isRC == 1:
-                continue
+            # if isRC == 1:
+                # continue
             dimer_seqs.append(dimer_seq)
             motif1_seqs.append(motif1_seq)
             motif2_seqs.append(motif2_seq)
