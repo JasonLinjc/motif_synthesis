@@ -60,11 +60,9 @@ class motif_encoder:
         isRCs = []
         for name in dimerfamily_dict.keys():
             if dimerfamily_dict[name] == family_name:
-
-                isRC = kc_dimer_info[kc_dimer_info['nameOut'] == name]['isRC'].item()
-
                 try:
                     dimer_seq = dimer_seq_dict[name]
+                    isRC = kc_dimer_info[kc_dimer_info['nameOut'] == name]['isRC'].item()
                 except:
                     continue
                 motif1_name, motif2_name = name.split("_")[:2]
@@ -78,8 +76,8 @@ class motif_encoder:
                     motif2_seq = homomotif_seq_dict[motif2_name]
 
                 if isRC == 1:
-                    # dimer_seq = get_rev_com_y(dimer_seq)
-                    continue
+                    dimer_seq = get_rev_com_y(dimer_seq)
+                    # continue
 
                 motif_pair = np.concatenate((motif1_seq, motif2_seq))
                 motif_pair_seqs.append(motif_pair)
@@ -157,7 +155,7 @@ class motif_encoder:
                 dist_list.append(tem_dist)
         dist_list = np.array(dist_list)
         res = dist_list/len_
-        print(res)
+        # print(res)
         return min(res)
 
 def get_rev_com_y(seq_mat):
