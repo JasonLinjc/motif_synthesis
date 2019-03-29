@@ -198,7 +198,7 @@ def seq2seq_mt_model(encoder_input_data, decoder_input_data, decoder_target_data
     input_dim = 128
     target_dim = 126
     encoder_inputs = Input(shape=(None, input_dim))
-    encoder = LSTM(latent_dim, return_state=True)
+    # encoder = LSTM(latent_dim, return_state=True)
     # encoder_outputs, state_h, state_c = encoder(encoder_inputs)
 
     encoder = Bidirectional(LSTM(latent_dim, return_state=True))

@@ -83,57 +83,48 @@ concator = Concatenate(axis=-1)
 
 
 def seq_model(Tx, Ty, n_a, n_s, source_seq_dim, target_seq_dim):
-    """
-    构造模型
-    @param Tx: 输入序列的长度
-    @param Ty: 输出序列的长度
-    @param n_a: Encoder端Bi-LSTM隐层结点数
-    @param n_s: Decoder端LSTM隐层结点数
-    """
-    # 定义输入层
+
     X = Input(shape=(Tx, source_seq_dim))
-    # Embedding层
-    # embed = embedding_layer(X)
-    # Decoder端LSTM的初始状态
+    y = Input(shape=(Ty, target_seq_dim))
     s0 = Input(shape=(n_s,), name='s0')
     c0 = Input(shape=(n_s,), name='c0')
 
-    # Decoder端LSTM的初始输入
     out0 = Input(shape=(target_seq_dim, ), name='out0')
     out = reshapor(out0)
 
     s = s0
     c = c0
 
-    # 模型输出列表，用来存储翻译的结果
     outputs = []
-
-    # 定义Bi-LSTM
     a = Bidirectional(LSTM(n_a, return_sequences=True))(X)
 
-    # Decoder端，迭代Ty轮，每轮生成一个翻译结果
-    for t in range(Ty):
-        # 获取Context Vector
-        context = one_step_attention(a, s)
-
-        # 将Context Vector与上一轮的翻译结果进行concat
-        context = concator([context, reshapor(out)])
-        s, _, c = decoder_LSTM_cell(context, initial_state=[s, c])
-
-        # 将LSTM的输出结果与全连接层链接
-        out = output_layer(s)
-
-        # 存储输出结果
-        outputs.append(out)
+    # teacher_forcing_ratio = 0.5
+    # use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
+    use_teacher_forcing = True
+    if not use_teacher_forcing:
+        # without using teacher forcing
+        for t in range(Ty):
+            context = one_step_attention(a, s)
+            context = concator([context, reshapor(out)])
+            s, _, c = decoder_LSTM_cell(context, initial_state=[s, c])
+            out = output_layer(s)
+            outputs.append(out)
+    else:
+        # using teacher forcing
+        for t in range(Ty):
+            context = one_step_attention(a, s)
+            context = concator([context, reshapor(out)])
+            s, _, c = decoder_LSTM_cell(context, initial_state=[s, c]) #
+            out = output_layer(s)
+            outputs.append(out)
 
     # outputs = np.array(outputs)
 
     model = Model([X, s0, c0, out0], outputs)
-
     return model
 
 model = seq_model(Tx, Ty, n_a, n_s, source_dim, target_dim)
-# model.summary()
+model.summary()
 out = model.compile(optimizer=Adam(lr=0.01, beta_1=0.9, beta_2=0.999, decay=0.001),
                     metrics=['accuracy'],
                     loss='categorical_crossentropy')
@@ -156,7 +147,6 @@ def load_sequence_data(family_name = "bHLH_Homeo"):
                                                 motif2_seq=motif2_seqs[i], dimer_seq=dimer_seqs[i])
         source_sequence = m.motif_pair_code
         target_sequence = m.dimer_code
-
         # print(source_sequence.shape)
         # print(target_sequence.shape)
         s_seqs.append(source_sequence)
@@ -179,8 +169,7 @@ def family_cv():
         mean_dist = leave_one_validation(f)
         res_dict[family_set[i]] = mean_dist
     import pickle
-    pickle.dump(res_dict, open("family_locv.pkl", "wb"))
-
+    pickle.dump(res_dict, open("./family_locv.pkl", "wb"))
 
 
 def leave_one_validation(fname):
@@ -243,6 +232,7 @@ def fold10_cv():
     fold_dict = dict()
     fold_id = 0
     for train_index, test_index in kf.split(source_seqs):
+        print("-"*10, fold_id, "-"*10)
         res_dist = []
         s_train = source_seqs[train_index]
         t_train = target_seqs[train_index]
@@ -252,8 +242,9 @@ def fold10_cv():
         s0 = np.zeros((m, n_s))
         c0 = np.zeros((m, n_s))
         out0 = np.zeros((m, target_dim))
+        out0[:, 0] = 1.0
         outputs = list(t_train.swapaxes(0, 1))
-        model.fit([s_train, s0, c0, out0], outputs, epochs=300, batch_size=50)
+        model.fit([s_train, s0, c0, out0], outputs, epochs=100, batch_size=50)
         preds = model.predict([s_test, s0, c0, out0])
         pred_dimer = np.array(preds).swapaxes(0, 1)
         print(pred_dimer.shape)
@@ -266,9 +257,9 @@ def fold10_cv():
                     break
                 else:
                     end_idx += 1
-            pdimer = pdimer[1:end_idx, 1:-1]
+            pdimer = pdimer[:end_idx, 1:-1]
             end_idx = np.arange(len(tdimer))[tdimer[:, -1] == 1][0]
-            tdimer = tdimer[1:end_idx, 1:-1]
+            tdimer = tdimer[:end_idx, 1:-1]
             avg_dist = motif_encoder_decoder.motif_encoder.mean_motif_column_dist(true_dimer=tdimer,                                                                                pred_dimer=pdimer)
             # print(avg_dist)
             res_dist.append(avg_dist)
@@ -277,9 +268,10 @@ def fold10_cv():
         fold_id += 1
 
     import pickle
-    pickle.dump(fold_dict, open("10_fold_cv.pkl", "wb"))
+    pickle.dump(fold_dict, open("10_fold_cv300n.pkl", "wb"))
+
 
 # leave_one_validation()
-# fold10_cv()
-family_cv()
+fold10_cv()
+# family_cv()
 # leave_one_validation("HomeoCUT_Fox")

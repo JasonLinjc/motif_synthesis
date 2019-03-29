@@ -36,7 +36,7 @@ class motif_encoder:
         # Add two symbols : <GO> and <EOS>
         dimer_code = np.zeros((self.dimer_maxlen, 6))
         dimer_code[0] = np.array([1, 0, 0, 0, 0, 0])
-        i = 1
+        i = 0
         for n_code in self.dimer_seq:
             c = np.zeros((6))
             c[1:-1] = n_code
@@ -121,6 +121,8 @@ class motif_encoder:
                 motif2_seq = homomotif_seq_dict[motif2_name]
             # if isRC == 1:
                 # continue
+            if isRC == 1:
+                dimer_seq = get_rev_com_y(dimer_seq)
             dimer_seqs.append(dimer_seq)
             motif1_seqs.append(motif1_seq)
             motif2_seqs.append(motif2_seq)
