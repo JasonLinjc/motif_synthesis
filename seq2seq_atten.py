@@ -73,7 +73,7 @@ def one_step_attention(a, s_prev):
     return context
 
 n_a = 32 # The hidden size of Bi-LSTM
-n_s = 128 # The hidden size of LSTM in Decoder
+n_s = 64 # The hidden size of LSTM in Decoder
 decoder_LSTM_cell = LSTM(n_s, return_state=True)
 output_layer = Dense(target_dim, activation=softmax)
 
@@ -244,7 +244,7 @@ def fold10_cv():
         out0 = np.zeros((m, target_dim))
         out0[:, 0] = 1.0
         outputs = list(t_train.swapaxes(0, 1))
-        model.fit([s_train, s0, c0, out0], outputs, epochs=100, batch_size=50)
+        model.fit([s_train, s0, c0, out0], outputs, epochs=300, batch_size=50)
         preds = model.predict([s_test, s0, c0, out0])
         pred_dimer = np.array(preds).swapaxes(0, 1)
         print(pred_dimer.shape)
