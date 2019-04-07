@@ -220,4 +220,4 @@ def multi_loss(len_true, len_pred, case_true, case_pred):
 # pred_len, pred_case = multi_task_CNN(mp_tensor[:50], len_labels[:50], case_labels[:50], mp_tensor[-10:])
 
 
-fold10_cross_validation()
+# fold10_cross_validation()

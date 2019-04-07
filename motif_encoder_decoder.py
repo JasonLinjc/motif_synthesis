@@ -96,6 +96,7 @@ class motif_encoder:
         motif1_seqs = []
         motif2_seqs = []
         isRCs = []
+        family_name = []
         kc_dimer_info = pd.read_csv("./JiecongData/kc_dimer_info.csv")
         homomotif_seq_dict = pkl.load(open("./JiecongData/homodimerMotifDatabase_dict.pkl", "rb"))
         motif_seq_dict = pkl.load(open("JiecongData/motifDatabase_dict.pkl", "rb"))
@@ -111,6 +112,7 @@ class motif_encoder:
             motif2_name = d_info['name2']
             dimer_name = d_info['nameOut']
             dimer_seq = dimer_seq_dict[dimer_name]
+            dimer_family = dimerfamily_dict[dimer_name]
             try:
                 motif1_seq = motif_seq_dict[motif1_name]
             except:
@@ -128,7 +130,8 @@ class motif_encoder:
             motif2_seqs.append(motif2_seq)
             dimer_list.append(dimer_name)
             isRCs.append(isRC)
-        return [dimer_list, dimer_seqs, motif1_seqs, motif2_seqs, isRCs]
+            family_name.append(dimer_family)
+        return [dimer_list, dimer_seqs, motif1_seqs, motif2_seqs, isRCs, family_name]
 
     @classmethod
     def mean_motif_column_dist(self, true_dimer, pred_dimer):
@@ -220,4 +223,5 @@ def get_seq():
     print(motif1_len, motif2_len, dimer_len)
 
 # get_seq()
-# motif_encoder.get_sequence_family_input()
+# d = motif_encoder.get_all_dimer()
+# print(len(d[-1]))

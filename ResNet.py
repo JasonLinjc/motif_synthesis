@@ -120,9 +120,9 @@ def ResNet(x_input, y_len, y_case, x_test):
     inputs = Input(shape=(18, 18, 28))
     x = layers.ZeroPadding2D(padding=(3, 3), name='conv1_pad')(inputs)
     x = layers.BatchNormalization(axis=bn_axis, name='bn_conv1')(x)
-    # x = layers.Activation('relu')(x)
-    # x = layers.ZeroPadding2D(padding=(1, 1), name='pool1_pad')(x)
-    # x = layers.MaxPooling2D((3, 3), strides=(2, 2))(x)
+    x = layers.Activation('relu')(x)
+    x = layers.ZeroPadding2D(padding=(1, 1), name='pool1_pad')(x)
+    x = layers.MaxPooling2D((3, 3), strides=(2, 2))(x)
 
     x = conv_block(x, 3, [64, 64, 256], stage=2, block='a', strides=(1, 1))
     x = identity_block(x, 3, [64, 64, 256], stage=2, block='b')
@@ -142,10 +142,10 @@ def ResNet(x_input, y_len, y_case, x_test):
     model.compile(optimizer='adam',
                   loss={
                       'len_out': 'mean_squared_logarithmic_error',
-                      'case_out': 'mean_squared_logarithmic_error'},
+                      'case_out': 'categorical_crossentropy'},
                   loss_weights={
-                      'len_out': 0.4,
-                      'case_out': 0.6})
+                      'len_out': 0.0,
+                      'case_out': 1.})
 
     print(model.summary())
 
@@ -198,18 +198,25 @@ def one_cross_validation():
             tprs_4[i][-1][0] = 0.0
             aucs_4[i].append(roc_auc[i])
 
-            plt.plot(fpr[i], tpr[i], color=colors[i],
-                     label=r'Mean ROC Case %d (AUC = %0.3f )' % (i + 1, roc_auc[i]), lw=2, alpha=.8)
+            # plt.plot(fpr[i], tpr[i], color=colors[i], label=r'Mean ROC Case %d (AUC = %0.3f )' % (i + 1, roc_auc[i]), lw=2, alpha=.8)
 
-        plt.xlim([-0.05, 1.05])
-        plt.ylim([-0.05, 1.05])
-        plt.xlabel('False Positive Rate')
-        plt.ylabel('True Positive Rate')
-        plt.title('Receiver operating characteristic example')
-        plt.legend(loc="lower right")
-        plt.show()
+    for i in range(case_n_classes):
+        mean_tpr = np.mean(tprs_4[i], axis=0)
+        mean_tpr[-1] = 1.0
+        mean_auc = auc(mean_fpr, mean_tpr)
+        std_auc = np.std(aucs_4[i])
+        plt.plot(mean_fpr, mean_tpr, color=colors[i],
+                 label=r'Mean ROC Case %d (AUC = %0.3f $\pm$ %0.3f)' % (i + 1, mean_auc, std_auc),
+                 lw=2, alpha=.8)
 
-        break
+    print(aucs_4)
+    plt.xlim([-0.05, 1.05])
+    plt.ylim([-0.05, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Receiver operating characteristic example')
+    plt.legend(loc="lower right")
+    plt.show()
 
 
 one_cross_validation()
