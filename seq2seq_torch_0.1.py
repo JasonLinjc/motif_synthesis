@@ -57,22 +57,19 @@ def load_sequence_data(family_name = "all"):
     return s_seqs, t_seqs
 
 class Encoder(nn.Module):
-    def __init__(self, input_dim, emb_dim, enc_hid_dim, dec_hid_dim, dropout):
+    def __init__(self, input_dim, enc_hid_dim, dec_hid_dim, dropout):
         super().__init__()
 
         self.input_dim = input_dim
-        # self.emb_dim = emb_dim
         self.enc_hid_dim = enc_hid_dim
         self.dec_hid_dim = dec_hid_dim
         self.dropout = dropout
 
-        # self.embedding = nn.Embedding(input_dim, emb_dim)
 
         self.rnn = nn.GRU(input_dim, enc_hid_dim, bidirectional=True)
 
         self.fc = nn.Linear(enc_hid_dim * 2, dec_hid_dim)
 
-        # self.dropout = nn.Dropout(dropout)
 
     def forward(self, src):
         # src = [src sent len, batch size]
@@ -133,7 +130,6 @@ class Attention(nn.Module):
         # encoder_outputs = [batch size, src sent len, enc hid dim * 2]
         concat = torch.cat((hidden, encoder_outputs), dim=2)
 
-
         energy = torch.tanh(self.attn(concat))
 
         # energy = [batch size, src sent len, dec hid dim]
@@ -154,25 +150,152 @@ class Attention(nn.Module):
 
         return F.softmax(attention, dim=1)
 
+class Decoder(nn.Module):
+    def __init__(self, output_dim, enc_hid_dim, dec_hid_dim, attention):
+        super().__init__()
 
+        self.enc_hid_dim = enc_hid_dim
+        self.dec_hid_dim = dec_hid_dim
+        self.output_dim = output_dim
+        self.attention = attention
+
+
+        self.rnn = nn.GRU((enc_hid_dim * 2) + output_dim, dec_hid_dim)
+
+        self.out = nn.Linear((enc_hid_dim * 2) + dec_hid_dim + output_dim, output_dim)
+
+
+    def forward(self, input, hidden, encoder_outputs):
+        # input = [batch size]
+        # hidden = [batch size, dec hid dim]
+        # encoder_outputs = [src sent len, batch size, enc hid dim * 2]
+
+        input = input.unsqueeze(0)
+
+        # input = [1, batch size, enc_dim]
+
+        # embedded = self.dropout(self.embedding(input))
+
+        # embedded = [1, batch size, emb dim]
+
+        a = self.attention(hidden, encoder_outputs)
+
+        # a = [batch size, src len]
+
+        a = a.unsqueeze(1)
+
+        # a = [batch size, 1, src len]
+
+        encoder_outputs = encoder_outputs.permute(1, 0, 2)
+
+        # encoder_outputs = [batch size, src sent len, enc hid dim * 2]
+
+        weighted = torch.bmm(a, encoder_outputs)
+
+        # weighted = [batch size, 1, enc hid dim * 2]
+
+        weighted = weighted.permute(1, 0, 2)
+
+        # weighted = [1, batch size, enc hid dim * 2]
+
+        rnn_input = torch.cat((input, weighted), dim=2)
+
+        # rnn_input = [1, batch size, (enc hid dim * 2) + enc_dim]
+
+        output, hidden = self.rnn(rnn_input, hidden.unsqueeze(0))
+
+        # output = [sent len, batch size, dec hid dim * n directions]
+        # hidden = [n layers * n directions, batch size, dec hid dim]
+
+        # sent len, n layers and n directions will always be 1 in this decoder, therefore:
+        # output = [1, batch size, dec hid dim]
+        # hidden = [1, batch size, dec hid dim]
+        # this also means that output == hidden
+        assert (output == hidden).all()
+
+        embedded = input.squeeze(0)
+        output = output.squeeze(0)
+        weighted = weighted.squeeze(0)
+
+        output = self.out(torch.cat((output, weighted, embedded), dim=1))
+
+        # output = [bsz, output dim]
+
+        return output, hidden.squeeze(0)
+
+
+class Seq2Seq(nn.Module):
+    def __init__(self, encoder, decoder, device):
+        super().__init__()
+
+        self.encoder = encoder
+        self.decoder = decoder
+        self.device = device
+
+    def forward(self, src, trg, teacher_forcing_ratio=0.5):
+        # src = [batch_size, src_seq_len, src_dim]
+        # trg = [batch_size, trg_seq_len, trg_dim]
+        # teacher_forcing_ratio is probability to use teacher forcing
+        # e.g. if teacher_forcing_ratio is 0.75 we use teacher forcing 75% of the time
+
+
+        batch_size = src.shape[0]
+        max_len = trg.shape[1]
+        trg_vocab_size = self.decoder.output_dim
+
+        # tensor to store decoder outputs
+        outputs = torch.zeros(max_len, batch_size, trg_vocab_size).to(self.device)
+
+        # encoder_outputs is all hidden states of the input sequence, back and forwards
+        # hidden is the final forward and backward hidden states, passed through a linear layer
+        encoder_outputs, hidden = self.encoder(src)
+
+        # first input to the decoder is the <sos> tokens
+        output = torch.tensor([1., 0., 0., 0., 0., 0.]).repeat(BATCH_SIZE).view(BATCH_SIZE, -1).to(device)
+
+        for t in range(max_len):
+            output, hidden = self.decoder(output, hidden, encoder_outputs)
+            outputs[t] = output
+            teacher_force = random.random() < teacher_forcing_ratio
+            output = (trg[:, t] if teacher_force else output)
+
+        # outputs = [trg_seq_len, batch_size, trg_dim]
+        return outputs
+
+
+BATCH_SIZE = 10
 source_seqs, target_seqs, fnames = load_sequence_data(family_name="all")
 source_seqs, target_seqs = map(torch.tensor, (source_seqs, target_seqs))
 print(target_seqs.size(), source_seqs.size())
 source_seqs = source_seqs.to(device)
 target_seqs = target_seqs.to(device)
 train_ds = TensorDataset(source_seqs, target_seqs)
-train_dl = DataLoader(train_ds, batch_size=10, shuffle=True)
+train_dl = DataLoader(train_ds, batch_size=BATCH_SIZE, shuffle=True)
 
-encoder = Encoder(input_dim=4, emb_dim=16, enc_hid_dim=32, dec_hid_dim=32, dropout=0.1).to(device)
+encoder = Encoder(input_dim=4, enc_hid_dim=32, dec_hid_dim=32, dropout=0.1).to(device)
 attention = Attention(enc_hid_dim=32, dec_hid_dim=32).to(device)
+decoder = Decoder(enc_hid_dim=32, dec_hid_dim=32, output_dim=6, attention=attention).to(device)
+seq2seq_model = Seq2Seq(encoder, decoder, device)
+
 for source_seq, target_seq in train_dl:
     ########################Very Important#########################
     source_tensor = source_seq.float()
     target_tensor = target_seq.float()
     ###############################################################
     encoder_outputs, encoder_hidden = encoder(source_tensor)
-    print(encoder_outputs.size(), encoder_hidden.size())
-    atte_weight = attention(encoder_hidden, encoder_outputs)
+    # print(encoder_outputs.size(), encoder_hidden.size())
+    #
+    # atte_weight = attention(encoder_hidden, encoder_outputs)
+    # sos_input = torch.tensor([1., 0., 0., 0., 0., 0.]).repeat(BATCH_SIZE).view(BATCH_SIZE, -1).to(device)
+    # t_trg = target_tensor[:,2]
+    # print(t_trg.size())
+    # decoder_output, decoder_hidden = decoder(sos_input, encoder_hidden, encoder_outputs)
+    # decoder_output, decoder_hidden = decoder(decoder_output, encoder_hidden, encoder_outputs)
+
+    # print(decoder_output.size())
+    # print(source_tensor.size(), target_tensor.size())
+    # output = seq2seq_model(source_tensor, target_tensor)
+    # print(output.size())
 
 
     # src_len = encoder_outputs.size(0)
@@ -182,6 +305,6 @@ for source_seq, target_seq in train_dl:
     # t = torch.cat((encoder_hidden, encoder_outputs), dim=2)
     # print(t.size())
     # a = torch.tanh(att(t))
-    print(atte_weight.size())
+    # print(atte_weight.size())
     break
 
