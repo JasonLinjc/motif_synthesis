@@ -217,7 +217,7 @@ class Decoder(nn.Module):
         output = output.squeeze(0)
         weighted = weighted.squeeze(0)
 
-        output = self.out(torch.cat((output, weighted, embedded), dim=1))
+        output = F.softmax(self.out(torch.cat((output, weighted, embedded), dim=1)), dim =1)
 
         # output = [bsz, output dim]
 
@@ -251,7 +251,7 @@ class Seq2Seq(nn.Module):
         encoder_outputs, hidden = self.encoder(src)
 
         # first input to the decoder is the <sos> tokens
-        output = torch.tensor([1., 0., 0., 0., 0., 0.]).repeat(BATCH_SIZE).view(BATCH_SIZE, -1).to(device)
+        output = torch.tensor([1., 0., 0., 0., 0., 0.]).repeat(batch_size).view(batch_size, -1).to(device)
 
         for t in range(max_len):
             output, hidden = self.decoder(output, hidden, encoder_outputs)
@@ -262,49 +262,165 @@ class Seq2Seq(nn.Module):
         # outputs = [trg_seq_len, batch_size, trg_dim]
         return outputs
 
+def train(seq2seq_model, criterion, train_dl):
+    # BATCH_SIZE = 10
+    # source_seqs, target_seqs, fnames = load_sequence_data(family_name="all")
+    # source_seqs, target_seqs = map(torch.tensor, (source_seqs, target_seqs))
+    # print(target_seqs.size(), source_seqs.size())
+    # Set the device (cuda) and data type (float)
+    # source_seqs = source_seqs.float().to(device)
+    # target_seqs = target_seqs.float().to(device)
+    # train_ds = TensorDataset(source_seqs, target_seqs)
+    # train_dl = DataLoader(train_ds, batch_size=BATCH_SIZE, shuffle=True)
 
-BATCH_SIZE = 10
+    # encoder = Encoder(input_dim=4, enc_hid_dim=32, dec_hid_dim=32, dropout=0.1).to(device)
+    # attention = Attention(enc_hid_dim=32, dec_hid_dim=32).to(device)
+    # decoder = Decoder(enc_hid_dim=32, dec_hid_dim=32, output_dim=6, attention=attention).to(device)
+    # seq2seq_model = Seq2Seq(encoder, decoder, device)
+
+    seq2seq_model.train()
+    # criterion = nn.SmoothL1Loss()
+    epoch_loss = 0
+
+    optimizer = optim.Adam(seq2seq_model.parameters())
+    len_ = 0
+    for source_seq, target_seq in train_dl:
+        len_ += 1
+        ########################Very Important#########################
+        source_tensor = source_seq
+        target_tensor = target_seq
+        ###############################################################
+        # ncoder_outputs, encoder_hidden = encoder(source_tensor)
+        # print(encoder_outputs.size(), encoder_hidden.size())
+        #
+        # atte_weight = attention(encoder_hidden, encoder_outputs)
+        # sos_input = torch.tensor([1., 0., 0., 0., 0., 0.]).repeat(BATCH_SIZE).view(BATCH_SIZE, -1).to(device)
+        # t_trg = target_tensor[:,2]
+        # print(t_trg.size())
+        # decoder_output, decoder_hidden = decoder(sos_input, encoder_hidden, encoder_outputs)
+        # decoder_output, decoder_hidden = decoder(decoder_output, encoder_hidden, encoder_outputs)optimizer = optim.Adam(model.parameters())
+
+        # print(decoder_output.size())
+        # print(source_tensor.size(), target_tensor.size())
+        # output = seq2seq_model(source_tensor, target_tensor)
+        # print(output.size())
+
+        # src_len = encoder_outputs.size(0)
+        # encoder_hidden = encoder_hidden.unsqueeze(1).repeat(1, src_len, 1)
+        # encoder_outputs = encoder_outputs.permute(1, 0, 2)
+        # att = nn.Linear(96, 32).to(device)
+        # t = torch.cat((encoder_hidden, encoder_outputs), dim=2)
+        # print(t.size())
+        # a = torch.tanh(att(t))
+        # print(atte_weight.size())
+        optimizer.zero_grad()
+
+        output = seq2seq_model(source_tensor, target_tensor)
+        predict_target = output.permute(1, 0, 2)
+        # print(predict_target.size())
+        # print(target_tensor.size())
+        loss = criterion(predict_target, target_tensor)
+        loss.backward()
+        clip = 1
+        torch.nn.utils.clip_grad_norm_(seq2seq_model.parameters(), clip)
+        optimizer.step()
+        epoch_loss += loss.item()
+
+    return epoch_loss/len_
+
+def evaluate(seq2seq_model, criterion, val_dl):
+    seq2seq_model.eval()
+    epoch_loss = 0
+    with torch.no_grad():
+        len_ = 0
+        for src_tensor, trg_tensor in val_dl:
+            len_ += 1
+            seq2seq_model(src_tensor, trg_tensor, 0)
+            output = seq2seq_model(src_tensor, trg_tensor, 0)
+            predict_target = output.permute(1, 0, 2)
+            loss = criterion(predict_target, trg_tensor)
+            epoch_loss += loss.item()
+
+    return epoch_loss/len_
+
+
+def epoch_time(start_time, end_time):
+    elapsed_time = end_time - start_time
+    elapsed_mins = int(elapsed_time / 60)
+    elapsed_secs = int(elapsed_time - (elapsed_mins * 60))
+    return elapsed_mins, elapsed_secs
+
+
+N_EPOCHS = 5
+BATCH_SIZE = 30
+SAVE_DIR = 'models'
+MODEL_SAVE_PATH = os.path.join(SAVE_DIR, 'seq2seq_att_model.pt')
+
+best_valid_loss = float('inf')
+
+if not os.path.isdir(f'{SAVE_DIR}'):
+    os.makedirs(f'{SAVE_DIR}')
+
+
+from sklearn.model_selection import KFold
 source_seqs, target_seqs, fnames = load_sequence_data(family_name="all")
-source_seqs, target_seqs = map(torch.tensor, (source_seqs, target_seqs))
-print(target_seqs.size(), source_seqs.size())
-source_seqs = source_seqs.to(device)
-target_seqs = target_seqs.to(device)
-train_ds = TensorDataset(source_seqs, target_seqs)
-train_dl = DataLoader(train_ds, batch_size=BATCH_SIZE, shuffle=True)
+kf = KFold(n_splits=10, random_state=66, shuffle=True)
+# fold_id = 0
+for train_index, val_index in kf.split(source_seqs):
+    # print("-" * 10, fold_id, "-" * 10)
+    res_dist = []
+    src_train = source_seqs[train_index]
+    trg_train = target_seqs[train_index]
+    src_val = source_seqs[val_index]
+    trg_val = target_seqs[val_index]
+    # Training data
+    src_train, trg_train = map(torch.tensor, (src_train, trg_train))
+    print(src_train.size(), trg_train.size())
+    src_train = src_train.float().to(device)
+    trg_train = trg_train.float().to(device)
+    train_ds = TensorDataset(src_train, trg_train)
+    train_dl = DataLoader(train_ds, batch_size=BATCH_SIZE)
+    # Validating data
+    val_batch_size = len(src_val)
+    src_val, trg_val = map(torch.tensor, (src_val, trg_val))
+    src_val = src_val.float().to(device)
+    trg_val = trg_val.float().to(device)
+    val_ds = TensorDataset(src_val, trg_val)
+    val_dl = DataLoader(train_ds, batch_size=val_batch_size)
 
-encoder = Encoder(input_dim=4, enc_hid_dim=32, dec_hid_dim=32, dropout=0.1).to(device)
-attention = Attention(enc_hid_dim=32, dec_hid_dim=32).to(device)
-decoder = Decoder(enc_hid_dim=32, dec_hid_dim=32, output_dim=6, attention=attention).to(device)
-seq2seq_model = Seq2Seq(encoder, decoder, device)
+    encoder = Encoder(input_dim=4, enc_hid_dim=32, dec_hid_dim=32, dropout=0.1).to(device)
+    attention = Attention(enc_hid_dim=32, dec_hid_dim=32).to(device)
+    decoder = Decoder(enc_hid_dim=32, dec_hid_dim=32, output_dim=6, attention=attention).to(device)
+    seq2seq_model = Seq2Seq(encoder, decoder, device)
+    # Training and validating seq2seq model
+    for epoch in range(N_EPOCHS):
+        start_time = time.time()
+        criterion = nn.SmoothL1Loss()
+        train_loss = train(seq2seq_model, criterion, train_dl)
+        valid_loss = evaluate(seq2seq_model, criterion, val_dl)
+        end_time = time.time()
+        epoch_mins, epoch_secs = epoch_time(start_time, end_time)
 
-for source_seq, target_seq in train_dl:
-    ########################Very Important#########################
-    source_tensor = source_seq.float()
-    target_tensor = target_seq.float()
-    ###############################################################
-    encoder_outputs, encoder_hidden = encoder(source_tensor)
-    # print(encoder_outputs.size(), encoder_hidden.size())
-    #
-    # atte_weight = attention(encoder_hidden, encoder_outputs)
-    # sos_input = torch.tensor([1., 0., 0., 0., 0., 0.]).repeat(BATCH_SIZE).view(BATCH_SIZE, -1).to(device)
-    # t_trg = target_tensor[:,2]
-    # print(t_trg.size())
-    # decoder_output, decoder_hidden = decoder(sos_input, encoder_hidden, encoder_outputs)
-    # decoder_output, decoder_hidden = decoder(decoder_output, encoder_hidden, encoder_outputs)
+        print(f'Epoch: {epoch + 1:02} | Time: {epoch_mins}m {epoch_secs}s')
+        print(f'\tTrain Loss: {train_loss:.3f} | Train PPL: {math.exp(train_loss):7.3f}')
+        print(f'\t Val. Loss: {valid_loss:.3f} |  Val. PPL: {math.exp(valid_loss):7.3f}')
 
-    # print(decoder_output.size())
-    # print(source_tensor.size(), target_tensor.size())
-    # output = seq2seq_model(source_tensor, target_tensor)
-    # print(output.size())
-
-
-    # src_len = encoder_outputs.size(0)
-    # encoder_hidden = encoder_hidden.unsqueeze(1).repeat(1, src_len, 1)
-    # encoder_outputs = encoder_outputs.permute(1, 0, 2)
-    # att = nn.Linear(96, 32).to(device)
-    # t = torch.cat((encoder_hidden, encoder_outputs), dim=2)
-    # print(t.size())
-    # a = torch.tanh(att(t))
-    # print(atte_weight.size())
     break
+
+
+
+
+    # valid_loss = evaluate(seq2seq_model, criterion,)
+
+
+
+
+
+
+
+
+
+
+
+
 
