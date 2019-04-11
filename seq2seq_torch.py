@@ -122,7 +122,7 @@ def trainEpoch(epochs=100):
     decoder = AttnDecoderRNN(32, 32, 6, dropout_p=0.1).to(device)
 
     encoder_optimizer = optim.Adam(encoder.parameters(), lr=learning_rate, weight_decay=0.001)
-    decoder_optimizer = optim.SGD(decoder.parameters(), lr=learning_rate, weight_decay=0.001)
+    decoder_optimizer = optim.Adam(decoder.parameters(), lr=learning_rate, weight_decay=0.001)
     criterion = nn.SmoothL1Loss()
     # criterion = nn.NLLLoss()
 

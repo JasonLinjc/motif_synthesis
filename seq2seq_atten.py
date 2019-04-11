@@ -299,7 +299,6 @@ def fold10_cv():
         fold_info_dict[fold_id] = [pred_info, t_fname]
         fold_id += 1
 
-
     import pickle
     pickle.dump(fold_dict, open("10_fold_cv300n_scl.pkl", "wb"))
     pickle.dump(fold_info_dict, open("./10fold_predimer_scl.pkl", "wb"))

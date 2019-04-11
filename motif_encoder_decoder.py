@@ -138,7 +138,7 @@ class motif_encoder:
         # print(true_dimer_code)
         true_len = len(true_dimer)
         pred_len = len(pred_dimer)
-        print("true_len:", true_len, "pred_len:", pred_len)
+        # print("true_len:", true_len, "pred_len:", pred_len)
         # len_ = min([true_len, pred_len])
         dist_list = []
         # print(self.true_dimer_code)
